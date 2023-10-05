@@ -36,9 +36,10 @@ public class RubikBehaviour : MonoBehaviour
         Application.Quit();
     }
 
-    void Reload()
+    public void Reload(uint _newSize)
     {
         DestroyRubik();
+        m_RubikSize = _newSize;
         CreateRubik();
     }
 
@@ -51,15 +52,6 @@ public class RubikBehaviour : MonoBehaviour
             Debug.Log("DestroyRubik called but m_Cubes seems empty");
 
         m_Cubes = new GameObject[0];
-    }
-
-    void OnValidate()
-    {
-        if (Application.isPlaying)
-            #if UNITY_EDITOR
-            if(!EditorApplication.isPaused)
-            #endif
-                Reload();
     }
 
     void CreateRubik()
@@ -75,12 +67,10 @@ public class RubikBehaviour : MonoBehaviour
             m_Cubes[id] = Instantiate(m_CubePrefab, transform);
             m_Cubes[id].name = "Cube_" + id;
 
-            if ((id % cubesInFace) == 0) 
-                z++;
+            if ((id % cubesInFace) == 0) z++;
             if (z > limit) z = -limit;
 
-            if ((id % m_RubikSize) == 0) 
-                y++;
+            if ((id % m_RubikSize) == 0) y++;
             if (y > limit) y = -limit;
 
             x++;
