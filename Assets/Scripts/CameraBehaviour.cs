@@ -4,5 +4,5 @@ using UnityEngine;
 
 public class CameraBehaviour : MonoBehaviour
 {
-    // coucou j'existe
+    // coucou j'existe :)
 }

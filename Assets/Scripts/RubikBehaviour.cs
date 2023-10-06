@@ -36,7 +36,7 @@ public class RubikBehaviour : MonoBehaviour
         Application.Quit();
     }
 
-    public void Reload(uint _newSize)
+    public void Reload(uint _newSize, uint _shuffles)
     {
         DestroyRubik();
         m_RubikSize = _newSize;
