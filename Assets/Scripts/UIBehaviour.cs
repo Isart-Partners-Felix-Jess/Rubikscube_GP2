@@ -5,39 +5,41 @@ using UnityEngine.UI;
 
 public class UIBehaviour : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI sizeText = null;
-    [SerializeField] private Slider sizeSlider = null;
+    [Header("Size")]
+    [SerializeField] private TextMeshProUGUI m_SizeText = null;
+    [SerializeField] private Slider m_SizeSlider = null;
 
-    [SerializeField] private TextMeshProUGUI shuffleText = null;
-    [SerializeField] private Slider shuffleSlider = null;
+    [Header("Shuffle")]
+    [SerializeField] private TextMeshProUGUI m_ShuffleText = null;
+    [SerializeField] private Slider m_ShuffleSlider = null;
 
-    [SerializeField] private Button confirmButton = null;
+    [Header("Instruction")]
+    [SerializeField] private Button m_InstructionButton = null;
+    [SerializeField] private GameObject m_InstructionPanel = null;
 
-    [SerializeField] private Button instructionButton = null;
-    [SerializeField] private GameObject instructionPanel = null;
-
-    [SerializeField] private TextMeshProUGUI successText = null;
-
-    [SerializeField] private GameObject rubiksCube = null;
+    [Header("Other")]
+    [SerializeField] private Button m_ConfirmButton = null;
+    [SerializeField] private TextMeshProUGUI m_SuccessText = null;
+    [SerializeField] private GameObject m_Cube = null;
 
     void Start()
     {
-        if (sizeText == null || sizeSlider == null ||
-            shuffleText == null || shuffleSlider == null ||
-            confirmButton == null || successText == null || rubiksCube == null ||
-            instructionPanel == null || instructionButton == null)
+        if (m_SizeText == null || m_SizeSlider == null ||
+            m_ShuffleText == null || m_ShuffleSlider == null ||
+            m_ConfirmButton == null || m_SuccessText == null || m_Cube == null ||
+            m_InstructionPanel == null || m_InstructionButton == null)
             ErrorDetected("One or multiple field unset in UIBehaviour");
 
-        sizeSlider.onValueChanged.AddListener(delegate { SizeChanged(); });
-        shuffleSlider.onValueChanged.AddListener(delegate { ShuffleChanged(); });
+        m_SizeSlider.onValueChanged.AddListener(delegate { SizeChanged(); });
+        m_ShuffleSlider.onValueChanged.AddListener(delegate { ShuffleChanged(); });
 
-        confirmButton.onClick.AddListener(delegate { ConfirmedPressed(); });
-        instructionButton.onClick.AddListener(delegate { InstructionPressed(); });
+        m_ConfirmButton.onClick.AddListener(delegate { ConfirmedPressed(); });
+        m_InstructionButton.onClick.AddListener(delegate { InstructionPressed(); });
     }
 
-    void ErrorDetected(string error)
+    void ErrorDetected(string _error)
     {
-        Debug.LogError(error);
+        Debug.LogError(_error);
         #if UNITY_EDITOR
         EditorApplication.ExitPlaymode();
         #endif
@@ -46,42 +48,42 @@ public class UIBehaviour : MonoBehaviour
 
     void ConfirmedPressed()
     {
-        successText.gameObject.SetActive(false);
-        rubiksCube.GetComponent<RubikBehaviour>().Reload((uint)sizeSlider.value, (uint)shuffleSlider.value);
+        m_SuccessText.gameObject.SetActive(false);
+        m_Cube.GetComponent<RubikBehaviour>().Reload((uint)m_SizeSlider.value, (uint)m_ShuffleSlider.value);
     }
 
     void InstructionPressed()
     {
-        Vector3 currentScale = instructionButton.transform.localScale;
-        instructionButton.transform.localScale = new(currentScale.x, -currentScale.y, currentScale.z);
-        instructionPanel.SetActive(!instructionPanel.activeInHierarchy);
+        Vector3 currentScale = m_InstructionButton.transform.localScale;
+        m_InstructionButton.transform.localScale = new(currentScale.x, -currentScale.y, currentScale.z);
+        m_InstructionPanel.SetActive(!m_InstructionPanel.activeInHierarchy);
     }
 
     void SizeChanged()
     {
-        sizeText.text = "Cube Size : ";
-        if (sizeSlider.value < 10) 
-            sizeText.text += "0" + sizeSlider.value.ToString();
+        m_SizeText.text = "Cube Size : ";
+        if (m_SizeSlider.value < 10) 
+            m_SizeText.text += "0" + m_SizeSlider.value.ToString();
         else 
-            sizeText.text += sizeSlider.value.ToString();
+            m_SizeText.text += m_SizeSlider.value.ToString();
     }
 
     void ShuffleChanged()
     {
-        shuffleText.text = "Shuffles : ";
-        if (shuffleSlider.value < 100)
+        m_ShuffleText.text = "Shuffles : ";
+        if (m_ShuffleSlider.value < 100)
         {
-            shuffleText.text += "0";
-            if (shuffleSlider.value < 10) 
-                shuffleText.text += "0" + shuffleSlider.value.ToString();
+            m_ShuffleText.text += "0";
+            if (m_ShuffleSlider.value < 10) 
+                m_ShuffleText.text += "0" + m_ShuffleSlider.value.ToString();
             else
-                shuffleText.text += shuffleSlider.value.ToString();
+                m_ShuffleText.text += m_ShuffleSlider.value.ToString();
         }
-        else shuffleText.text += shuffleSlider.value.ToString();
+        else m_ShuffleText.text += m_ShuffleSlider.value.ToString();
     }
 
     void Successful()
     {
-        successText.gameObject.SetActive(true);
+        m_SuccessText.gameObject.SetActive(true);
     }
 }
