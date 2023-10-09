@@ -788,8 +788,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6405a77122baa86499632da0a03aa3a9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_RubikSize: 3
   m_CubePrefab: {fileID: 5628456980620648605, guid: feaae7a9c3d5acc4cb231156d1d461d6, type: 3}
+  m_Camera: {fileID: 1020677669}
   m_MaterialFront: {fileID: 2100000, guid: 0fff5b8fd45bed24483adcce934d48a8, type: 2}
   m_MaterialBack: {fileID: 2100000, guid: b2ffb1ff2dd5c304dbf3cccb006ced06, type: 2}
   m_MaterialTop: {fileID: 2100000, guid: 0a22862565b48764da3f4c8992a941c0, type: 2}
@@ -969,15 +969,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 245d584f7db982f469fae160c50f3bf5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sizeText: {fileID: 2021103773}
-  sizeSlider: {fileID: 1660765862}
-  shuffleText: {fileID: 939705925}
-  shuffleSlider: {fileID: 48314195}
-  confirmButton: {fileID: 1887448309}
-  instructionButton: {fileID: 68532649}
-  instructionPanel: {fileID: 1968299431}
-  successText: {fileID: 1980515358}
-  rubiksCube: {fileID: 625446789}
+  m_SizeText: {fileID: 2021103773}
+  m_SizeSlider: {fileID: 1660765862}
+  m_ShuffleText: {fileID: 939705925}
+  m_ShuffleSlider: {fileID: 48314195}
+  m_InstructionButton: {fileID: 68532649}
+  m_InstructionPanel: {fileID: 1968299431}
+  m_ConfirmButton: {fileID: 1887448309}
+  m_SuccessText: {fileID: 1980515358}
+  m_Cube: {fileID: 625446789}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -1666,6 +1666,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c9718ec93e2df74d99fad7092461486, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Camera: {fileID: 963194227}
+  m_Cube: {fileID: 625446791}
 --- !u!1 &1465778286
 GameObject:
   m_ObjectHideFlags: 0
@@ -2017,7 +2019,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: b2ffb1ff2dd5c304dbf3cccb006ced06, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -3,10 +3,12 @@ using UnityEngine;
 
 public class RubikBehaviour : MonoBehaviour
 {
-    [SerializeField, Range(2, 10)] private uint m_RubikSize = 3;
-    [SerializeField] private GameObject m_CubePrefab = null;
+    private uint m_RubikSize = 3;
     private GameObject[] m_Cubes = new GameObject[0];
+    [SerializeField] private GameObject m_CubePrefab = null;
+    [SerializeField] private GameObject m_Camera = null;
 
+    [Header("Materials")]
     [SerializeField] private Material m_MaterialFront = null;
     [SerializeField] private Material m_MaterialBack = null;
     [SerializeField] private Material m_MaterialTop = null;
@@ -16,20 +18,18 @@ public class RubikBehaviour : MonoBehaviour
 
     void Start()
     {
-        if (m_CubePrefab == null)
-            ErrorDetected("No Cube Prefab set in RubikBehaviour");
+        if (m_CubePrefab == null || m_Camera == null)
+            ErrorDetected("One or multiple field unset in RubikBehaviour");
 
         if (m_MaterialFront == null || m_MaterialBack == null || 
             m_MaterialTop == null || m_MaterialBottom == null || 
             m_MaterialLeft == null || m_MaterialRight == null)
             ErrorDetected("One or multiple texture missing in RubikBehaviour");
-
-        CreateRubik();
     }
 
-    void ErrorDetected(string error)
+    void ErrorDetected(string _error)
     {
-        Debug.LogError(error);
+        Debug.LogError(_error);
         #if UNITY_EDITOR
         EditorApplication.ExitPlaymode();
         #endif
@@ -40,6 +40,7 @@ public class RubikBehaviour : MonoBehaviour
     {
         DestroyRubik();
         m_RubikSize = _newSize;
+        m_Camera.GetComponent<CameraBehaviour>().SizeChanged(_newSize);
         CreateRubik();
     }
 
@@ -48,8 +49,6 @@ public class RubikBehaviour : MonoBehaviour
         if (m_Cubes.Length > 0)
             for (uint id = 0; id < m_Cubes.Length; id++)
                 Destroy(m_Cubes[id]);
-        else
-            Debug.Log("DestroyRubik called but m_Cubes seems empty");
 
         m_Cubes = new GameObject[0];
     }
