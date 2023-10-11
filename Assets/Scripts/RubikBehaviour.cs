@@ -16,6 +16,13 @@ public class RubikBehaviour : MonoBehaviour
     [SerializeField] private Material m_MaterialLeft = null;
     [SerializeField] private Material m_MaterialRight = null;
 
+
+    [Header("Controls")]
+    [SerializeField] private float m_AngularSpeed = 1;
+
+
+    private Vector2 m_PreviousPos = Vector2.zero;
+
     void Start()
     {
         if (m_CubePrefab == null || m_Camera == null)
@@ -25,6 +32,39 @@ public class RubikBehaviour : MonoBehaviour
             m_MaterialTop == null || m_MaterialBottom == null || 
             m_MaterialLeft == null || m_MaterialRight == null)
             ErrorDetected("One or multiple texture missing in RubikBehaviour");
+        Reload(m_RubikSize,0);
+    }
+
+    private void Update()
+    {
+        RotateAll();
+    }
+
+    void RotateAll()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            m_PreviousPos = Input.mousePosition;
+        }
+        else if (Input.GetMouseButton(1))
+        {
+            Vector2 newPos = Input.mousePosition;
+            if (newPos == m_PreviousPos)
+                return;
+            Vector2 dir = m_PreviousPos - newPos;
+
+            float angleXAxis = -dir.y * m_AngularSpeed;
+            float angleYAxis = dir.x * m_AngularSpeed;
+
+
+            Quaternion xAxis = Quaternion.AngleAxis(angleXAxis /2f, Vector3.right);
+            Quaternion yAxis = Quaternion.AngleAxis(angleYAxis /2f, Vector3.up);
+
+            transform.rotation = yAxis * xAxis * transform.rotation;
+
+
+            m_PreviousPos = newPos;
+        }
     }
 
     void ErrorDetected(string _error)
