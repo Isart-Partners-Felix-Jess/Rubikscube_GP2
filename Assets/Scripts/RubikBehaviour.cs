@@ -1,5 +1,7 @@
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.UIElements;
 
 public class RubikBehaviour : MonoBehaviour
 {
@@ -18,61 +20,139 @@ public class RubikBehaviour : MonoBehaviour
 
 
     [Header("Controls")]
-    [SerializeField] private float m_AngularSpeed = 1;
+    [SerializeField, Tooltip("Degree per pixel")] private float m_AngularSpeed = 20;
+
+    [Header("Plane Detector")]
+    [SerializeField] private OnMouseOverColor m_PlaneDetectorScript;
+    private MouseOverNormal m_MouseOverNormal;
+
 
 
     private Vector2 m_PreviousPos = Vector2.zero;
+    private float temp_angleofrotation = 0;
+    private Vector3 temp_axis = Vector3.zero;
 
     void Start()
     {
+        m_MouseOverNormal = new MouseOverNormal();
         if (m_CubePrefab == null || m_Camera == null)
             ErrorDetected("One or multiple field unset in RubikBehaviour");
 
-        if (m_MaterialFront == null || m_MaterialBack == null || 
-            m_MaterialTop == null || m_MaterialBottom == null || 
+        if (m_MaterialFront == null || m_MaterialBack == null ||
+            m_MaterialTop == null || m_MaterialBottom == null ||
             m_MaterialLeft == null || m_MaterialRight == null)
             ErrorDetected("One or multiple texture missing in RubikBehaviour");
-        Reload(m_RubikSize,0);
+        Reload(m_RubikSize, 0);
     }
 
     private void Update()
     {
-        RotateAll();
+        RotateAllCtrl();
+        m_MouseOverNormal.Update();
+        if (m_MouseOverNormal.normal != Vector3.zero)
+            RotateFaceCtrl(m_MouseOverNormal.normal);
     }
 
-    void RotateAll()
+    void RotateAllCtrl()
     {
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown((int)MouseButton.RightMouse))
         {
             m_PreviousPos = Input.mousePosition;
         }
-        else if (Input.GetMouseButton(1))
+        else if (Input.GetMouseButton((int)MouseButton.RightMouse))
         {
             Vector2 newPos = Input.mousePosition;
             if (newPos == m_PreviousPos)
                 return;
             Vector2 dir = m_PreviousPos - newPos;
 
-            float angleXAxis = -dir.y * m_AngularSpeed;
-            float angleYAxis = dir.x * m_AngularSpeed;
+            float angleXAxis = -dir.y * m_AngularSpeed / 180f;
+            float angleYAxis = dir.x * m_AngularSpeed / 180f;
 
-
-            Quaternion xAxis = Quaternion.AngleAxis(angleXAxis /2f, Vector3.right);
-            Quaternion yAxis = Quaternion.AngleAxis(angleYAxis /2f, Vector3.up);
-
-            transform.rotation = yAxis * xAxis * transform.rotation;
-
+            RotateAll(angleXAxis, angleYAxis);
 
             m_PreviousPos = newPos;
         }
     }
 
+    void RotateAll(float _angleXAxis, float _angleYAxis)
+    {
+        Quaternion yAxis = Quaternion.AngleAxis(_angleYAxis, Vector3.up);
+        Quaternion xAxis = Quaternion.AngleAxis(_angleXAxis, Vector3.right);
+
+        transform.rotation = xAxis * yAxis * transform.rotation;
+    }
+    void RotateFaceCtrl(Vector3 _facenormal)
+    {
+        //On click
+        if (Input.GetMouseButtonDown((int)MouseButton.LeftMouse))
+        {
+            m_PreviousPos = Input.mousePosition;
+            temp_axis = _facenormal;
+        }
+        //On hold
+        else if (Input.GetMouseButton((int)MouseButton.LeftMouse))
+        {
+            Vector2 newPos = Input.mousePosition;
+            if (newPos == m_PreviousPos)
+                return;
+            Vector2 dir = m_PreviousPos - newPos;
+            float deltangle = Vector2.Dot(dir, Vector2.right) * m_AngularSpeed / 180f;
+            temp_angleofrotation += deltangle;
+            RotateFace(temp_axis, deltangle);
+
+            //float angleXAxis = -dir.y * m_AngularSpeed / 180f;
+            //float angleYAxis = dir.x * m_AngularSpeed / 180f;
+            //RotateAll(angleXAxis, angleYAxis);
+            m_PreviousPos = newPos;
+        }
+        //On release
+        else if (temp_angleofrotation != 0f)
+        {
+            int moves = Mathf.RoundToInt(temp_angleofrotation / 90) % 4;//4 rotations = back to start
+            RotateFace(temp_axis, -temp_angleofrotation +
+                //Clip to nearest angle
+                moves * 90);
+            temp_angleofrotation = 0f;
+            //Here add 1 more move to list
+            //m_moves.add(new Move(moves,axis))
+            temp_axis = Vector3.zero;
+        }
+    }
+    void RotateFace(Vector3 _normal, float _angle)
+    {
+        foreach (GameObject cube in m_Cubes)
+        {
+            foreach (Transform face in cube.transform)
+            {
+                if (!face.CompareTag("ext"))
+                    continue;
+                else
+                    //Care for approximation: could use a dotproduct instead
+                    if (face.forward == -_normal)
+                {
+                    Vector3 oldposition = cube.transform.position;
+                    Quaternion rotation = Quaternion.AngleAxis(_angle, _normal);
+                    cube.transform.rotation = rotation * cube.transform.rotation;
+                    Quaternion newposition = rotation * new Quaternion(oldposition.x, oldposition.y, oldposition.z, 0f) * Quaternion.Inverse(rotation);
+                    cube.transform.position = new Vector3(newposition.x, newposition.y, newposition.z);
+                }
+            }
+        }
+    }
+
+    void HandleMouseOver()
+    {
+        // This method will be called when a child face is moused over.
+
+    }
+
     void ErrorDetected(string _error)
     {
         Debug.LogError(_error);
-        #if UNITY_EDITOR
+#if UNITY_EDITOR
         EditorApplication.ExitPlaymode();
-        #endif
+#endif
         Application.Quit();
     }
 
@@ -81,7 +161,9 @@ public class RubikBehaviour : MonoBehaviour
         DestroyRubik();
         m_RubikSize = _newSize;
         m_Camera.GetComponent<CameraBehaviour>().SizeChanged(_newSize);
+        //Rotate to see 3 faces
         CreateRubik();
+        RotateAll(-30, 45);
     }
 
     void DestroyRubik()
@@ -91,6 +173,7 @@ public class RubikBehaviour : MonoBehaviour
                 Destroy(m_Cubes[id]);
 
         m_Cubes = new GameObject[0];
+        transform.rotation = Quaternion.identity;
     }
 
     void CreateRubik()
@@ -117,20 +200,55 @@ public class RubikBehaviour : MonoBehaviour
 
             m_Cubes[id].transform.position = new Vector3(x, y, z);
 
+            Transform extFace;
             if (z == -limit) // front face
-                m_Cubes[id].transform.Find("Front").GetComponent<MeshRenderer>().material= m_MaterialFront;
+            {
+                extFace = m_Cubes[id].transform.Find("Front");
+                extFace.GetComponent<MeshRenderer>().material = m_MaterialFront;
+                OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
+                script.onMouseOverAction += HandleMouseOver;
+                extFace.gameObject.tag = "ext";
+            }
             else if (z == limit) // back face
-                m_Cubes[id].transform.Find("Back").GetComponent<MeshRenderer>().material = m_MaterialBack;
-
+            {
+                extFace = m_Cubes[id].transform.Find("Back");
+                extFace.GetComponent<MeshRenderer>().material = m_MaterialBack;
+                OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
+                script.onMouseOverAction += HandleMouseOver;
+                extFace.gameObject.tag = "ext";
+            }
             if (y == -limit) // bottom face
-                m_Cubes[id].transform.Find("Bottom").GetComponent<MeshRenderer>().material = m_MaterialBottom;
+            {
+                extFace = m_Cubes[id].transform.Find("Bottom");
+                extFace.GetComponent<MeshRenderer>().material = m_MaterialBottom;
+                OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
+                script.onMouseOverAction += HandleMouseOver;
+                extFace.gameObject.tag = "ext";
+            }
             else if (y == limit) // top face
-                m_Cubes[id].transform.Find("Top").GetComponent<MeshRenderer>().material = m_MaterialTop;
-
+            {
+                extFace = m_Cubes[id].transform.Find("Top");
+                extFace.GetComponent<MeshRenderer>().material = m_MaterialTop;
+                OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
+                script.onMouseOverAction += HandleMouseOver;
+                extFace.gameObject.tag = "ext";
+            }
             if (x == -limit) // left face
-                m_Cubes[id].transform.Find("Left").GetComponent<MeshRenderer>().material = m_MaterialLeft;
+            {
+                extFace = m_Cubes[id].transform.Find("Left");
+                extFace.GetComponent<MeshRenderer>().material = m_MaterialLeft;
+                OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
+                script.onMouseOverAction += HandleMouseOver;
+                extFace.gameObject.tag = "ext";
+            }
             else if (x == limit) // right face
-                m_Cubes[id].transform.Find("Right").GetComponent<MeshRenderer>().material = m_MaterialRight;
+            {
+                extFace = m_Cubes[id].transform.Find("Right");
+                extFace.GetComponent<MeshRenderer>().material = m_MaterialRight;
+                OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
+                script.onMouseOverAction += HandleMouseOver;
+                extFace.gameObject.tag = "ext";
+            }
         }
     }
 }
