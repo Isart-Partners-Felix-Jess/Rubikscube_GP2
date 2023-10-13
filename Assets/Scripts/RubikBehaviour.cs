@@ -21,6 +21,8 @@ public class RubikBehaviour : MonoBehaviour
 
     [Header("Controls")]
     [SerializeField, Tooltip("Degree per pixel")] private float m_AngularSpeed = 20;
+    [SerializeField, Tooltip("pixel before turning")] private float m_deltaThreshold = 20;
+
 
     [Header("Plane Detector")]
     [SerializeField] private OnMouseOverColor m_PlaneDetectorScript;
@@ -99,6 +101,9 @@ public class RubikBehaviour : MonoBehaviour
             Vector2 dir = m_PreviousPos - newPos;
             float deltangle = Vector2.Dot(dir, Vector2.right) * m_AngularSpeed / 180f;
             temp_angleofrotation += deltangle;
+            if (deltangle < m_deltaThreshold)
+                return;
+            //Precise here X or Y
             RotateFace(temp_axis, deltangle);
 
             //float angleXAxis = -dir.y * m_AngularSpeed / 180f;

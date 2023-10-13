@@ -769,6 +769,8 @@ GameObject:
   m_Component:
   - component: {fileID: 625446791}
   - component: {fileID: 625446790}
+  - component: {fileID: 625446793}
+  - component: {fileID: 625446792}
   m_Layer: 0
   m_Name: RubikCube
   m_TagString: Untagged
@@ -797,6 +799,8 @@ MonoBehaviour:
   m_MaterialLeft: {fileID: 2100000, guid: e53dc2a231897e742a51750392ee7185, type: 2}
   m_MaterialRight: {fileID: 2100000, guid: 6a04adc183d1c2c4485843bde3b5bc73, type: 2}
   m_AngularSpeed: 20
+  m_deltaThreshold: 20
+  m_PlaneDetectorScript: {fileID: 625446792}
 --- !u!4 &625446791
 Transform:
   m_ObjectHideFlags: 0
@@ -812,6 +816,39 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &625446792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625446789}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fef992234553c5342bd33bd3b35bc892, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!65 &625446793
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 625446789}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 0
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &643300937
 GameObject:
   m_ObjectHideFlags: 0
