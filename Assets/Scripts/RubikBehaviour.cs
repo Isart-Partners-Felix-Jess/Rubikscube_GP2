@@ -51,7 +51,6 @@ public class RubikBehaviour : MonoBehaviour
     {
         RotateAllCtrl();
         m_MouseOverNormal.Update();
-        if (m_MouseOverNormal.normal != Vector3.zero)
             RotateFaceCtrl(m_MouseOverNormal.normal);
     }
 
@@ -89,6 +88,8 @@ public class RubikBehaviour : MonoBehaviour
         //On click
         if (Input.GetMouseButtonDown((int)MouseButton.LeftMouse))
         {
+            if (m_MouseOverNormal.normal == Vector3.zero)
+                return;
             m_PreviousPos = Input.mousePosition;
             temp_axis = _facenormal;
         }
@@ -99,10 +100,10 @@ public class RubikBehaviour : MonoBehaviour
             if (newPos == m_PreviousPos)
                 return;
             Vector2 dir = m_PreviousPos - newPos;
-            float deltangle = Vector2.Dot(dir, Vector2.right) * m_AngularSpeed / 180f;
-            temp_angleofrotation += deltangle;
-            if (deltangle < m_deltaThreshold)
+            if (dir.x < m_deltaThreshold && dir.y < m_deltaThreshold)
                 return;
+            float deltangle = dir.x* m_AngularSpeed / 180f;
+            temp_angleofrotation += deltangle;
             //Precise here X or Y
             RotateFace(temp_axis, deltangle);
 
