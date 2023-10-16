@@ -2,6 +2,9 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Animations;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
+using System;
+using UnityEngine.EventSystems;
 
 public class RubikBehaviour : MonoBehaviour
 {
@@ -33,9 +36,14 @@ public class RubikBehaviour : MonoBehaviour
     private Vector2 m_PreviousPos = Vector2.zero;
     private float temp_angleofrotation = 0;
     private Vector3 temp_axis = Vector3.zero;
+    private GameObject m_SelectedFace= null;
+    private GameObject m_SelectedCube = null;
+    private List<GameObject> m_SelectedGroupCubes ;
+    private bool m_AxisDecided = false;
 
-    void Start()
+    private void Start()
     {
+        m_SelectedGroupCubes= new List<GameObject>();
         m_MouseOverNormal = new MouseOverNormal();
         if (m_CubePrefab == null || m_Camera == null)
             ErrorDetected("One or multiple field unset in RubikBehaviour");
@@ -49,12 +57,19 @@ public class RubikBehaviour : MonoBehaviour
 
     private void Update()
     {
-        RotateAllCtrl();
+        // Check if the mouse pointer is over a UI element
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            // Mouse is over a UI element, so ignore clicks
+            return;
+        }
+
         m_MouseOverNormal.Update();
-            RotateFaceCtrl(m_MouseOverNormal.normal);
+        RotateFaceCtrl(m_MouseOverNormal.normal);
+        RotateAllCtrl();
     }
 
-    void RotateAllCtrl()
+    private void RotateAllCtrl()
     {
         if (Input.GetMouseButtonDown((int)MouseButton.RightMouse))
         {
@@ -76,22 +91,76 @@ public class RubikBehaviour : MonoBehaviour
         }
     }
 
-    void RotateAll(float _angleXAxis, float _angleYAxis)
+    private void RotateAll(float _angleXAxis, float _angleYAxis)
     {
         Quaternion yAxis = Quaternion.AngleAxis(_angleYAxis, Vector3.up);
         Quaternion xAxis = Quaternion.AngleAxis(_angleXAxis, Vector3.right);
 
         transform.rotation = xAxis * yAxis * transform.rotation;
     }
-    void RotateFaceCtrl(Vector3 _facenormal)
+
+    private Vector3 SelectAxis(Vector2 dir)
+    {
+        float up = Vector3.Dot(dir, m_SelectedFace.transform.up );
+        float right = Vector3.Dot(dir, m_SelectedFace.transform.right );
+        float forward = Vector3.Dot(dir, m_SelectedFace.transform.forward);
+
+        float max = Mathf.Max( Mathf.Abs(right), Mathf.Abs(forward));
+
+        if (Mathf.Abs(up) >= max)
+        {
+            SelectFace(1);
+            return transform.right;
+        }
+        else
+        {
+            if (Mathf.Abs(right) >= max)
+                SelectFace(0);
+            if (Mathf.Abs(forward) >= max)
+                SelectFace(2);
+            return transform.right;
+        }
+        //else if (max == Mathf.Abs(forward))
+        //{
+        //    SelectFace(2);
+        //    return m_SelectedFace.transform.forward;
+        //}
+        return Vector3.zero;
+    }
+    //index 0<->x, 1<->y, 2<->z 
+    private void SelectFace(uint _index)
+    {
+        if (_index == 0)
+        {
+            foreach (GameObject cube in m_Cubes)
+                if (cube.transform.localPosition.x == m_SelectedCube.transform.localPosition.x)
+                    m_SelectedGroupCubes.Add(cube);
+        }
+        if (_index == 1)
+        {
+            foreach (GameObject cube in m_Cubes)
+                if (cube.transform.localPosition.y == m_SelectedCube.transform.localPosition.y)
+                    m_SelectedGroupCubes.Add(cube);
+        }
+        if (_index == 2)
+        {
+            foreach (GameObject cube in m_Cubes)
+                if (cube.transform.localPosition.z == m_SelectedCube.transform.localPosition.z)
+                    m_SelectedGroupCubes.Add(cube);
+        }
+    }
+    private void RotateFaceCtrl(Vector3 _facenormal)
     {
         //On click
         if (Input.GetMouseButtonDown((int)MouseButton.LeftMouse))
         {
-            if (m_MouseOverNormal.normal == Vector3.zero)
+            if (m_MouseOverNormal.selectedObject == null)
                 return;
+            //SelectedObject is a face, so we take its parent to get the Cube
+            m_SelectedFace = m_MouseOverNormal.selectedObject;
+            m_SelectedCube = m_MouseOverNormal.selectedObject.transform.parent.gameObject;
             m_PreviousPos = Input.mousePosition;
-            temp_axis = _facenormal;
+            //temp_axis = _facenormal;
         }
         //On hold
         else if (Input.GetMouseButton((int)MouseButton.LeftMouse))
@@ -100,10 +169,17 @@ public class RubikBehaviour : MonoBehaviour
             if (newPos == m_PreviousPos)
                 return;
             Vector2 dir = m_PreviousPos - newPos;
-            if (dir.x < m_deltaThreshold && dir.y < m_deltaThreshold)
-                return;
-            float deltangle = dir.x* m_AngularSpeed / 180f;
+            if (!m_AxisDecided)
+            {
+                //test over squared distance
+                if (Vector2.SqrMagnitude(dir) < m_deltaThreshold * m_deltaThreshold)
+                    return;
+                temp_axis = SelectAxis(dir);
+                m_AxisDecided = true;
+            }
+            float deltangle = /*Vector3.Dot(dir, temp_axis)*/dir.magnitude * m_AngularSpeed / 180f;
             temp_angleofrotation += deltangle;
+
             //Precise here X or Y
             RotateFace(temp_axis, deltangle);
 
@@ -113,19 +189,28 @@ public class RubikBehaviour : MonoBehaviour
             m_PreviousPos = newPos;
         }
         //On release
-        else if (temp_angleofrotation != 0f)
+        else
         {
-            int moves = Mathf.RoundToInt(temp_angleofrotation / 90) % 4;//4 rotations = back to start
-            RotateFace(temp_axis, -temp_angleofrotation +
-                //Clip to nearest angle
-                moves * 90);
+            if (temp_angleofrotation != 0f)
+            {
+                int moves = Mathf.RoundToInt(temp_angleofrotation / 90) % 4;//4 rotations = back to start
+                RotateFace(temp_axis, -temp_angleofrotation //reset rotation
+                                                            //Clip to nearest angle
+                    + moves * 90);
+                RoundFacePositions((m_RubikSize%2) == 0);
+                //Here add 1 more move to list
+                //m_moves.add(new Move(moves,axis))
+            }
+            //Reset Variables
             temp_angleofrotation = 0f;
-            //Here add 1 more move to list
-            //m_moves.add(new Move(moves,axis))
             temp_axis = Vector3.zero;
+            m_SelectedFace = null;
+            m_SelectedCube = null;
+            m_AxisDecided = false;
+            m_SelectedGroupCubes.Clear();
         }
     }
-    void RotateFace(Vector3 _normal, float _angle)
+    private void RotateFaceAroundNormal(Vector3 _normal, float _angle)
     {
         foreach (GameObject cube in m_Cubes)
         {
@@ -146,14 +231,38 @@ public class RubikBehaviour : MonoBehaviour
             }
         }
     }
+    private void RotateFace(Vector3 _axis, float _angle)
+    {
+        foreach (GameObject cube in m_SelectedGroupCubes)
+        {
+            Vector3 oldposition = cube.transform.position;
+            Quaternion rotation = Quaternion.AngleAxis(_angle, _axis);
+            cube.transform.rotation = rotation * cube.transform.rotation;
+            Quaternion newposition = rotation * new Quaternion(oldposition.x, oldposition.y, oldposition.z, 0f) * Quaternion.Inverse(rotation);
+            cube.transform.position = new Vector3(newposition.x, newposition.y, newposition.z);
+        }
+    }
+    private void RoundFacePositions(bool _evenNumberOfFaces)
+    {
+        foreach (GameObject cube in m_SelectedGroupCubes)
+        {
+            Vector3 oldposition = cube.transform.localPosition;
+            if(_evenNumberOfFaces)
+                oldposition -= new Vector3(0.5f, 0.5f, 0.5f);
+            Vector3 newposition = new Vector3(Mathf.RoundToInt(oldposition.x), Mathf.RoundToInt(oldposition.y), Mathf.RoundToInt(oldposition.z));
+            if (_evenNumberOfFaces)
+                newposition += new Vector3(0.5f, 0.5f, 0.5f);
+            cube.transform.localPosition = newposition;
+        }
+    }
 
-    void HandleMouseOver()
+    private void HandleMouseOver()
     {
         // This method will be called when a child face is moused over.
 
     }
 
-    void ErrorDetected(string _error)
+    private void ErrorDetected(string _error)
     {
         Debug.LogError(_error);
 #if UNITY_EDITOR
@@ -172,7 +281,7 @@ public class RubikBehaviour : MonoBehaviour
         RotateAll(-30, 45);
     }
 
-    void DestroyRubik()
+    private void DestroyRubik()
     {
         if (m_Cubes.Length > 0)
             for (uint id = 0; id < m_Cubes.Length; id++)
@@ -182,7 +291,7 @@ public class RubikBehaviour : MonoBehaviour
         transform.rotation = Quaternion.identity;
     }
 
-    void CreateRubik()
+    private void CreateRubik()
     {
         uint cubesInFace = m_RubikSize * m_RubikSize;
         uint cubesToMake = cubesInFace * m_RubikSize;
