@@ -38,6 +38,7 @@ public class RubikBehaviour : MonoBehaviour
 
     [Header("Auto controls")]
     [SerializeField, Tooltip("In seconds")] private float m_TimePerMoveToSolve = 0.5f;
+    [SerializeField, Tooltip("In seconds")] private float m_TimePerMoveToShuffle = 0.25f;
 
     private GameObject m_SelectedFace = null;
     private GameObject m_SelectedCube = null;
@@ -473,7 +474,10 @@ public class RubikBehaviour : MonoBehaviour
 
     private void Shuffle(uint _number)
     {
-        
+        StartCoroutine(ShuffleWithDelay(_number));
+    }
+    private IEnumerator ShuffleWithDelay(uint _number)
+    { 
         while( m_Moves.Count() < _number) 
         {
             uint axis = (uint)UnityEngine.Random.Range(0, 2);
@@ -481,14 +485,15 @@ public class RubikBehaviour : MonoBehaviour
             int number = UnityEngine.Random.Range(1, 3);
             RotateFace(axis, index, number);
             AddMove(axis, index, number);
+            yield return new WaitForSeconds(m_TimePerMoveToShuffle); // Adjust the time as needed
         }
     }
     public void Solve()
     {
-        StartCoroutine(ShuffleWithDelay());
+        StartCoroutine(SolveWithDelay());
     }
 
-    private IEnumerator ShuffleWithDelay()
+    private IEnumerator SolveWithDelay()
     {
         while (m_Moves.Count() > 0)
         {
