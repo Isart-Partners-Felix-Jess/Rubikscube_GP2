@@ -113,6 +113,11 @@ public class UIBehaviour : MonoBehaviour
                 m_MovesLeftText.text += str_count;
         }
         else m_MovesLeftText.text += str_count;
+
+        if (count == 0)
+            Successful();
+        else
+            m_SuccessText.gameObject.SetActive(false);
     }
 
     void Successful()

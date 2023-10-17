@@ -47,15 +47,13 @@ public class RubikBehaviour : MonoBehaviour
     private float temp_angleofrotation = 0;
 
     public event Action MovesChanged;
-    
+    //Setter
     private List<MoveClass> m_Moves;
-    //UI
+    //UI Getter
     public List<MoveClass> moves
     {
-        get { return m_Moves; } private set {
-            m_Moves = value;
-            MovesChanged?.Invoke();
-        } }
+        get { return m_Moves; }
+    }
 
     private void Start()
     {
@@ -346,10 +344,16 @@ public class RubikBehaviour : MonoBehaviour
         {
             m_Moves.Last().number = (m_Moves.Last().number + _number) % 4;
             if (m_Moves.Last().number == 0)
+            {
                 m_Moves.RemoveAt(m_Moves.Count - 1);
+                MovesChanged?.Invoke();
+            }
         }
         else
+        {
             m_Moves.Add(new MoveClass(_axis, _index, _number));
+            MovesChanged?.Invoke();
+        }
     }
 
     private void HandleMouseOver()
