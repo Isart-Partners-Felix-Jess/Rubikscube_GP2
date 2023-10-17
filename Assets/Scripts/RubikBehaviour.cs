@@ -46,8 +46,16 @@ public class RubikBehaviour : MonoBehaviour
     private Vector3 temp_axis = Vector3.zero;
     private float temp_angleofrotation = 0;
 
+    public event Action MovesChanged;
+    
     private List<MoveClass> m_Moves;
-
+    //UI
+    public List<MoveClass> moves
+    {
+        get { return m_Moves; } private set {
+            m_Moves = value;
+            MovesChanged?.Invoke();
+        } }
 
     private void Start()
     {
@@ -304,13 +312,13 @@ public class RubikBehaviour : MonoBehaviour
         switch (_axis)
         {
             case 0:
-                axis = Vector3.right;
+                axis = transform.right;
                 break;
             case 1:
-                axis = Vector3.up;
+                axis = transform.up;
                 break;
             case 2:
-                axis = Vector3.forward;
+                axis = transform.forward;
                 break;
             default:
                 return;
@@ -469,9 +477,8 @@ public class RubikBehaviour : MonoBehaviour
             AddMove(axis, index, number);
         }
     }
-    private void Solve()
+    public void Solve()
     {
-
         while (m_Moves.Count() > 0)
         {
             uint axis = m_Moves.Last().axis;
