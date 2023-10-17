@@ -469,5 +469,17 @@ public class RubikBehaviour : MonoBehaviour
             AddMove(axis, index, number);
         }
     }
+    private void Solve()
+    {
+
+        while (m_Moves.Count() > 0)
+        {
+            uint axis = m_Moves.Last().axis;
+            uint index = m_Moves.Last().index;
+            int number = -m_Moves.Last().number;
+            RotateFace(axis, index, number);
+            AddMove(axis, index, number);
+        }
+    }
 }
 
