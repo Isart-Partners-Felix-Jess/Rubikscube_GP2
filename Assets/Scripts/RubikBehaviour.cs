@@ -9,6 +9,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using static UnityEngine.Random;
 using System.Globalization;
+using System.Collections;
 
 public class RubikBehaviour : MonoBehaviour
 {
@@ -28,14 +29,15 @@ public class RubikBehaviour : MonoBehaviour
 
     [Header("Controls")]
     [SerializeField, Tooltip("Degree per pixel")] private float m_AngularSpeed = 20;
-    [SerializeField, Tooltip("pixel before turning")] private float m_deltaThreshold = 20;
+    [SerializeField, Tooltip("Pixels before turning")] private float m_deltaThreshold = 20;
 
 
     [Header("Plane Detector")]
     [SerializeField] private OnMouseOverColor m_PlaneDetectorScript;
     private MouseOverNormal m_MouseOverNormal;
 
-
+    [Header("Auto controls")]
+    [SerializeField, Tooltip("In seconds")] private float m_TimePerMoveToSolve = 0.5f;
 
     private GameObject m_SelectedFace = null;
     private GameObject m_SelectedCube = null;
@@ -483,13 +485,24 @@ public class RubikBehaviour : MonoBehaviour
     }
     public void Solve()
     {
+        StartCoroutine(ShuffleWithDelay());
+    }
+
+    private IEnumerator ShuffleWithDelay()
+    {
         while (m_Moves.Count() > 0)
         {
             uint axis = m_Moves.Last().axis;
             uint index = m_Moves.Last().index;
             int number = -m_Moves.Last().number;
+
+            // Rotate the face
             RotateFace(axis, index, number);
+            // Add the move
             AddMove(axis, index, number);
+
+            // Wait for a specified amount of time (e.g., 1 second)
+            yield return new WaitForSeconds(m_TimePerMoveToSolve); // Adjust the time as needed
         }
     }
 }
