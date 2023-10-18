@@ -10,6 +10,9 @@ using System.Runtime.CompilerServices;
 using static UnityEngine.Random;
 using System.Globalization;
 using System.Collections;
+using static UnityEditor.PlayerSettings;
+using System.Reflection;
+using System.Drawing;
 
 public class RubikBehaviour : MonoBehaviour
 {
@@ -46,7 +49,10 @@ public class RubikBehaviour : MonoBehaviour
 
     private bool m_AxisDecided = false;
     private Vector2 m_PreviousPos = Vector2.zero;
-    private Vector3 temp_axis = Vector3.zero;
+
+    //Temp Move
+    private int temp_axis;
+    private int temp_index;
     private float temp_angleofrotation = 0;
 
     public event Action MovesChanged;
@@ -83,8 +89,7 @@ public class RubikBehaviour : MonoBehaviour
         }
 
         m_MouseOverNormal.Update();
-        if (m_MouseOverNormal.selectedObject != null)
-            RotateFaceCtrl(m_MouseOverNormal.normal);
+        RotateFaceCtrl(m_MouseOverNormal.normal);
         RotateAllCtrl();
     }
 
@@ -118,10 +123,10 @@ public class RubikBehaviour : MonoBehaviour
         transform.rotation = xAxis * yAxis * transform.rotation;
     }
 
-    private Vector3 SelectAxis(Vector2 _dir)
+    private int SelectAxis(bool _XoverY)
     {
         //Rotate mouse axis
-        Vector3 diroriented = m_SelectedFace.transform.rotation * _dir;// * Quaternion.Inverse(m_SelectedFace.transform.rotation);
+        //Vector3 diroriented = m_SelectedFace.transform.rotation * _dir;// * Quaternion.Inverse(m_SelectedFace.transform.rotation);
         //float up = Vector3.Dot(_dir, m_SelectedFace.transform.up);
         //float right = Vector3.Dot(_dir, m_SelectedFace.transform.right);
         //float forward = Vector3.Dot(_dir, m_SelectedFace.transform.forward);
@@ -148,23 +153,121 @@ public class RubikBehaviour : MonoBehaviour
         //    return m_SelectedFace.transform.forward;
         //}
 
-        float up = Vector3.Angle(diroriented, m_SelectedFace.transform.up);
-        float right = Vector3.Angle(diroriented, m_SelectedFace.transform.right);
-        //float forward = Vector3.Angle(_dir, m_SelectedFace.transform.forward);
+        //Front Face
+        if (m_SelectedFace.transform.forward == transform.forward)
+            if (_XoverY)
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
+                SelectFace(1);
+                return temp_axis = 1;
+                //return transform.up; 
+            }
+            else
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
+                SelectFace(0);
+                return temp_axis = 0;
+                //return transform.right;
+            }
+        //Back Face
+        if (m_SelectedFace.transform.forward == -transform.forward)
+            if (_XoverY)
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
+                SelectFace(1);
+                return temp_axis = -1;
+                //return -transform.up;
+            }
+            else
+        {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
+                SelectFace(0);
+                return temp_axis = -0; //Could be a problem
+                //return -transform.right;
+            };
+        //Up Face
+        if (m_SelectedFace.transform.forward == -transform.up)
+            if (_XoverY)
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
+                SelectFace(2);
+                return temp_axis = 2;
+                //return transform.forward;
+            }
+            else
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
+                SelectFace(0);
+                return temp_axis = 0;
+                //return transform.right;
+            }
+        //Bottom Face
+        if (m_SelectedFace.transform.forward == transform.up)
+            if (_XoverY)
+                if (_XoverY)
+                {
+                    temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
+                    SelectFace(2);
+                    return temp_axis = -2;
+                    //return -transform.forward;
+                }
+                else
+                {
+                    temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
+                    SelectFace(0);
+                    return temp_axis = 0;
+                    //return transform.right;
+                }
+        //Left Face
+        if (m_SelectedFace.transform.forward == transform.right)
+            if (_XoverY)
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
+                SelectFace(1);
+                return temp_axis = 1;
+                //return transform.up; 
+            }
+            else
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
+                SelectFace(2);
+                return temp_axis = -2;
+                //return -transform.forward;
+            }
+        //Left Face
+        if (m_SelectedFace.transform.forward == -transform.right)
+            if (_XoverY)
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
+                SelectFace(1);
+                return temp_axis = 1;
+                //return transform.up;
+            }
+            else
+            {
+                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
+                SelectFace(2);
+                return temp_axis = 2;
+                //return transform.forward;
+            }
 
-        float min = Mathf.Min(Mathf.Abs(up), Mathf.Abs(right)/*, Mathf.Abs(forward)*/);
-        //up = Vector3.Angle(m_SelectedFace.transform.up, Camera.current.transform.up);
-        if (Mathf.Abs(up) == min)
-        {
-            SelectFace(1);
-            return m_SelectedFace.transform.up;
-        }
-        if (Mathf.Abs(right) == min)
-        {
-            SelectFace(0);
-            return m_SelectedFace.transform.right;
-        }
-        return Vector3.zero;
+        //float up = Vector3.Angle(diroriented, m_SelectedFace.transform.up);
+        //float right = Vector3.Angle(diroriented, m_SelectedFace.transform.right);
+        ////float forward = Vector3.Angle(_dir, m_SelectedFace.transform.forward);
+
+        //float min = Mathf.Min(Mathf.Abs(up), Mathf.Abs(right)/*, Mathf.Abs(forward)*/);
+        ////up = Vector3.Angle(m_SelectedFace.transform.up, Camera.current.transform.up);
+        //if (Mathf.Abs(up) == min)
+        //{
+        //    SelectFace(1);
+        //    return m_SelectedFace.transform.up;
+        //}
+        //if (Mathf.Abs(right) == min)
+        //{
+        //    SelectFace(0);
+        //    return m_SelectedFace.transform.right;
+        //}
+        return 0;
     }
     //index 0<->x, 1<->y, 2<->z 
     private void SelectFace(uint _axis)
@@ -187,6 +290,15 @@ public class RubikBehaviour : MonoBehaviour
                 if (cube.transform.localPosition.z == m_SelectedCube.transform.localPosition.z)
                     m_SelectedGroupCubes.Add(cube);
         }
+    }
+    private int PositionToIndex(float _pos)
+    {
+        return Mathf.RoundToInt(_pos + (m_RubikSize - 1) * 0.5f);
+
+    }
+    private float IndexToPosition(uint _index)
+    {
+        return _index - (m_RubikSize - 1) * 0.5f;
     }
     private void SelectFaceNumber(uint _axis, uint _index)
     {
@@ -232,20 +344,28 @@ public class RubikBehaviour : MonoBehaviour
             Vector2 newPos = Input.mousePosition;
             if (newPos == m_PreviousPos)
                 return;
-            Vector2 dir = m_PreviousPos - newPos;
+            Vector2 mouseDir = m_PreviousPos - newPos;
+            bool XoverY = false;
             if (!m_AxisDecided)
             {
                 //test over squared distance
-                if (Vector2.SqrMagnitude(dir) < m_deltaThreshold * m_deltaThreshold)
+                if (mouseDir.y > m_deltaThreshold && mouseDir.y > m_deltaThreshold)
+                {
+                    if (mouseDir.x >= mouseDir.y)
+                        XoverY = true;
+                    else
+                        XoverY = false;
+                }
+                else
                     return;
-                temp_axis = SelectAxis(dir);
+                temp_axis = SelectAxis(XoverY);
                 m_AxisDecided = true;
             }
-            float deltangle = Vector3.Dot(dir, temp_axis) * m_AngularSpeed / 180f;
+            float deltangle = (temp_axis < +0 ? -1:1) * (XoverY?mouseDir.x: mouseDir.y) * m_AngularSpeed / 180f;
             temp_angleofrotation += deltangle;
 
             //Precise here X or Y
-            RotateFace(temp_axis, deltangle);
+            RotateFace((uint)Mathf.Abs(temp_axis), (uint)temp_index, deltangle);
 
             //float angleXAxis = -dir.y * m_AngularSpeed / 180f;
             //float angleYAxis = dir.x * m_AngularSpeed / 180f;
@@ -258,16 +378,20 @@ public class RubikBehaviour : MonoBehaviour
             if (temp_angleofrotation != 0f)
             {
                 int moves = Mathf.RoundToInt(temp_angleofrotation / 90) % 4;//4 rotations = back to start
-                RotateFace(temp_axis, -temp_angleofrotation //reset rotation
-                                                            //Clip to nearest angle
-                    + moves * 90);
+                RotateFace((uint)Mathf.Abs(temp_axis), (uint)temp_index, -temp_angleofrotation //reset rotation
+                                                                         + moves * 90);       //Clip to nearest angle
+
+                //RotateFace(temp_axis, -temp_angleofrotation //reset rotation
+                //                        + moves * 90);     //Clip to nearest angle
+
                 RoundFacePositions((m_RubikSize % 2) == 0);
                 //Here add 1 more move to list
+                //if(moves != 0)
                 //m_moves.add(new Move(moves,axis))
             }
             //Reset Variables
             temp_angleofrotation = 0f;
-            temp_axis = Vector3.zero;
+            temp_axis = 0;
             m_SelectedFace = null;
             m_SelectedCube = null;
             m_AxisDecided = false;
@@ -306,7 +430,7 @@ public class RubikBehaviour : MonoBehaviour
             cube.transform.position = new Vector3(newposition.x, newposition.y, newposition.z);
         }
     }
-    private void RotateFace(uint _axis, uint _index, int _number)
+    private void RotateFace(uint _axis, uint _index, float _angle)
     {
         SelectFaceNumber(_axis, _index);
         Vector3 axis;
@@ -324,7 +448,12 @@ public class RubikBehaviour : MonoBehaviour
             default:
                 return;
         }
-        RotateFace(axis, _number * 90);
+        RotateFace(axis, _angle);
+    }
+    //Rotate a fixed number of 90deg rotations
+    private void RotateFace(uint _axis, uint _index, int _number)
+    {
+        RotateFace(_axis, _index, _number * 90f);
         RoundFacePositions((m_RubikSize % 2) == 0);
         m_SelectedGroupCubes.Clear();
     }
@@ -478,11 +607,11 @@ public class RubikBehaviour : MonoBehaviour
         StartCoroutine(ShuffleWithDelay(_number));
     }
     private IEnumerator ShuffleWithDelay(uint _number)
-    { 
-        while( m_Moves.Count() < _number) 
+    {
+        while (m_Moves.Count() < _number)
         {
             uint axis = (uint)UnityEngine.Random.Range(0, 2);
-            uint index = (uint)UnityEngine.Random.Range(0, m_RubikSize-1);
+            uint index = (uint)UnityEngine.Random.Range(0, m_RubikSize - 1);
             int number = UnityEngine.Random.Range(1, 3);
             RotateFace(axis, index, number);
             AddMove(axis, index, number);
