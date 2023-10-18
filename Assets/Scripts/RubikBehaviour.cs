@@ -163,11 +163,11 @@ public class RubikBehaviour : MonoBehaviour
             }
             else
             {
-            }
                 temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
                 SelectFace(0);
                 return temp_axis = 0;
                 //return transform.right;
+            }
         //Back Face
         if (m_SelectedFace.transform.forward == -transform.forward)
             if (_XoverY)
@@ -178,11 +178,11 @@ public class RubikBehaviour : MonoBehaviour
                 //return -transform.up;
             }
             else
-        {
+            {
                 temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
                 SelectFace(0);
                 return temp_axis = -0; //Could be a problem
-                //return -transform.right;
+                                       //return -transform.right;
             };
         //Up Face
         if (m_SelectedFace.transform.forward == -transform.up)
@@ -350,19 +350,19 @@ public class RubikBehaviour : MonoBehaviour
             if (!m_AxisDecided)
             {
                 //test over squared distance
-                if (mouseDir.y > m_deltaThreshold && mouseDir.y > m_deltaThreshold)
+                if (Mathf.Abs(mouseDir.y) > m_deltaThreshold || Mathf.Abs(mouseDir.y) > m_deltaThreshold)
                 {
-                    if (mouseDir.x >= mouseDir.y)
-                        XoverY = true;
-                    else
+                    if (Mathf.Abs(mouseDir.x) >= Mathf.Abs(mouseDir.y))
                         XoverY = false;
+                    else
+                        XoverY = true;
                 }
                 else
                     return;
-                temp_axis = SelectAxis(XoverY);
+                temp_axis = SelectAxis(!XoverY);
                 m_AxisDecided = true;
             }
-            float deltangle = (temp_axis < +0 ? 1:-1) * (XoverY?mouseDir.x: mouseDir.y) * m_AngularSpeed / 180f;
+            float deltangle = (temp_axis < +0 ? -1 : 1) * (XoverY ? mouseDir.y : mouseDir.x) * m_AngularSpeed /90;
             temp_angleofrotation += deltangle;
 
             //Precise here X or Y
@@ -387,7 +387,7 @@ public class RubikBehaviour : MonoBehaviour
 
                 RoundFacePositions((m_RubikSize % 2) == 0);
                 //Here add 1 more move to list
-                if(moves != 0)
+                if (moves != 0)
                     AddMove((uint)Mathf.Abs(temp_axis), (uint)temp_index, moves);
             }
             //Reset Variables
@@ -413,7 +413,7 @@ public class RubikBehaviour : MonoBehaviour
                 {
                     Vector3 oldposition = cube.transform.position;
                     Quaternion currentRotation = Quaternion.AngleAxis(_angle, _normal);
-                    cube.transform.rotation = currentRotation  * cube.transform.rotation;
+                    cube.transform.rotation = currentRotation * cube.transform.rotation;
                     Quaternion newposition = currentRotation * new Quaternion(oldposition.x, oldposition.y, oldposition.z, 0f) * Quaternion.Inverse(currentRotation);
                     cube.transform.position = new Vector3(newposition.x, newposition.y, newposition.z);
                 }
