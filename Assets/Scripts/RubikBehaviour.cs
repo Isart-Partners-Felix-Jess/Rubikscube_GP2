@@ -394,6 +394,7 @@ public class RubikBehaviour : MonoBehaviour
         m_Cubes = new GameObject[0];
         transform.rotation = Quaternion.identity;
         m_Moves.Clear();
+        StopAllCoroutines();
     }
 
     private void CreateRubik()
