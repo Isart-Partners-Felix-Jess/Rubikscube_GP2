@@ -46,10 +46,6 @@ public class UIBehaviour : MonoBehaviour
         m_Cube.GetComponent<RubikBehaviour>().MovesChanged += MovesChanged;
 
     }
-    private void OnDestroy()
-    {
-        m_Cube.GetComponent<RubikBehaviour>().MovesChanged -= MovesChanged;
-    }
     void ErrorDetected(string _error)
     {
         Debug.LogError(_error);

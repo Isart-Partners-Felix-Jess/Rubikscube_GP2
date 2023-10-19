@@ -33,7 +33,7 @@ public class RubikBehaviour : MonoBehaviour
     [Header("Controls")]
     [SerializeField, Tooltip("Degree per pixel")] private float m_AngularSpeed = 20;
     [SerializeField, Tooltip("Pixels before turning")] private float m_deltaThreshold = 20;
-
+    private bool m_BlockedCtrls = false;
 
     [Header("Plane Detector")]
     [SerializeField] private OnMouseOverColor m_PlaneDetectorScript;
@@ -51,6 +51,7 @@ public class RubikBehaviour : MonoBehaviour
     private Vector2 m_PreviousPos = Vector2.zero;
 
     //Temp Move
+    bool m_MouseXoverY;
     private int temp_axis;
     private int temp_index;
     private float temp_angleofrotation = 0;
@@ -124,6 +125,66 @@ public class RubikBehaviour : MonoBehaviour
 
     private int SelectAxis(bool _XoverY)
     {
+        float tolerance = 0.00001f;
+        Vector3 axis;
+        if (_XoverY)
+        {
+            //if(transform.right == m_SelectedFace.transform.forward)
+            //    axis = Vector3.Cross(transform.right, m_SelectedFace.transform.forward);
+            //else if (transform.right == -m_SelectedFace.transform.forward)
+            //    axis = Vector3.Cross(transform.right, m_SelectedFace.transform.forward);
+            //axis = Vector3.Cross(transform.right, m_SelectedFace.transform.forward);
+            axis = m_SelectedFace.transform.up;
+        }
+        else
+            //axis = Vector3.Cross(transform.up, m_SelectedFace.transform.forward);
+            axis = m_SelectedFace.transform.right;
+
+        //Bottom
+        if (Mathf.Abs(Vector3.Dot(axis, transform.up)) < tolerance)
+        {
+            temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
+            SelectFace(1);
+            return temp_axis = 1;
+        }
+        //Up
+        if (Mathf.Abs(Vector3.Dot(axis, -transform.up)) < tolerance)
+        {
+            temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
+            SelectFace(1);
+            return temp_axis = -1;
+        }
+        //Left
+        if (Mathf.Abs(Vector3.Dot(axis, transform.right)) < tolerance)
+        {
+            temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
+            SelectFace(0);
+            return temp_axis = 0;
+        }
+        //Right
+        if (Mathf.Abs(Vector3.Dot(axis, -transform.right)) < tolerance)
+        {
+            temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
+            SelectFace(0);
+            return temp_axis = -0;
+        }
+        //Bottom
+        if (Mathf.Abs(Vector3.Dot(axis, transform.forward)) < tolerance)
+        {
+            temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
+            SelectFace(2);
+            return temp_axis = 2;
+        }
+        //Up
+        if (Mathf.Abs(Vector3.Dot(axis, -transform.forward)) < tolerance)
+        {
+            temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
+            SelectFace(2);
+            return temp_axis = -2;
+        }
+
+
+
         //Rotate mouse axis
         //Vector3 diroriented = m_SelectedFace.transform.rotation * _dir;// * Quaternion.Inverse(m_SelectedFace.transform.rotation);
         //float up = Vector3.Dot(_dir, m_SelectedFace.transform.up);
@@ -328,7 +389,7 @@ public class RubikBehaviour : MonoBehaviour
         if (Input.GetMouseButtonDown((int)MouseButton.LeftMouse))
         {
             m_MouseOverNormal.Update();
-            if (m_MouseOverNormal.selectedObject == null)
+            if (m_MouseOverNormal.selectedObject == null || m_BlockedCtrls)
                 return;
             //SelectedObject is a face, so we take its parent to get the Cube
             m_SelectedFace = m_MouseOverNormal.selectedObject;
@@ -345,24 +406,27 @@ public class RubikBehaviour : MonoBehaviour
             if (newPos == m_PreviousPos)
                 return;
             Vector2 mouseDir = m_PreviousPos - newPos;
+
             //Shortcut by Unity
-            bool XoverY = false;
             if (!m_AxisDecided)
             {
                 //test over squared distance
-                if (Mathf.Abs(mouseDir.y) > m_deltaThreshold || Mathf.Abs(mouseDir.y) > m_deltaThreshold)
+                //if (Mathf.Abs(mouseDir.y) > m_deltaThreshold || Mathf.Abs(mouseDir.y) > m_deltaThreshold)
+                if (Vector3.SqrMagnitude(mouseDir) > m_deltaThreshold * m_deltaThreshold)
                 {
+                    //Shortcut unity for Qr * Qimpur(mousdir,0,0) * Qrbar
+                    mouseDir = Quaternion.Inverse(m_SelectedCube.transform.rotation) * mouseDir;
                     if (Mathf.Abs(mouseDir.x) >= Mathf.Abs(mouseDir.y))
-                        XoverY = false;
+                        m_MouseXoverY = false;
                     else
-                        XoverY = true;
+                        m_MouseXoverY = true;
                 }
                 else
                     return;
-                temp_axis = SelectAxis(!XoverY);
+                temp_axis = SelectAxis(!m_MouseXoverY);
                 m_AxisDecided = true;
             }
-            float deltangle = (temp_axis < +0 ? -1 : 1) * (XoverY ? mouseDir.y : mouseDir.x) * m_AngularSpeed /90;
+            float deltangle = /*(temp_axis < +0 ? -1 : 1) */ (m_MouseXoverY ? mouseDir.y : mouseDir.x) * m_AngularSpeed / 90;
             temp_angleofrotation += deltangle;
 
             //Precise here X or Y
@@ -497,16 +561,34 @@ public class RubikBehaviour : MonoBehaviour
             if (m_Moves.Last().number == 0)
             {
                 m_Moves.RemoveAt(m_Moves.Count - 1);
-                MovesChanged?.Invoke();
             }
         }
         else
         {
             m_Moves.Add(new MoveClass(_axis, _index, _number));
-            MovesChanged?.Invoke();
         }
+        CyclicRemove();
+        MovesChanged?.Invoke();
     }
-
+    private void CyclicRemove()
+    {
+        if (m_Moves.Count < 3)
+            return;
+        MoveClass last = m_Moves.Last();
+        MoveClass beforeLast = m_Moves[m_Moves.Count - 2];
+        MoveClass thirdLast = m_Moves[m_Moves.Count - 3];
+        if (
+        (last.number == beforeLast.number) &&       //same number
+        (last.number == thirdLast.number) &&        //same number
+        (last.axis == beforeLast.axis) &&           //same axis
+        (last.axis == thirdLast.axis) &&            //same axis
+        (last.index != beforeLast.index) &&         //different indexes
+        (last.index != thirdLast.index) &&          //different indexes
+        (beforeLast.index != thirdLast.index))      //different indexes
+        { m_Moves.RemoveRange(m_Moves.Count - 3, 3); } //Erase 3 last
+        else return;
+        CyclicRemove();
+    }
     private void HandleMouseOver()
     {
         // This method will be called when a child face is moused over.
@@ -634,8 +716,10 @@ public class RubikBehaviour : MonoBehaviour
             int number = UnityEngine.Random.Range(1, 3);
             RotateFace(axis, index, number);
             AddMove(axis, index, number);
+            m_BlockedCtrls = true;
             yield return new WaitForSeconds(m_TimePerMoveToShuffle); // Adjust the time as needed
         }
+        m_BlockedCtrls = false;
     }
     public void Solve()
     {
@@ -654,10 +738,11 @@ public class RubikBehaviour : MonoBehaviour
             RotateFace(axis, index, number);
             // Add the move
             AddMove(axis, index, number);
-
+            m_BlockedCtrls = true;
             // Wait for a specified amount of time (e.g., 1 second)
             yield return new WaitForSeconds(m_TimePerMoveToSolve); // Adjust the time as needed
         }
+        m_BlockedCtrls = false;
     }
 }
 
