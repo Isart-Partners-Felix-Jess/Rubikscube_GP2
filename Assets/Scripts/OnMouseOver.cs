@@ -1,12 +1,10 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 [RequireComponent(typeof(BoxCollider))]
 public class OnMouseOverColor : MonoBehaviour
 {
+    //only for Debug purpose
     bool m_IsHighlighted = false;
     public Action onMouseOverAction;
 

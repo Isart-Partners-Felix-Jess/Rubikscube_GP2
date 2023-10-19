@@ -1,18 +1,11 @@
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Animations;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System;
 using UnityEngine.EventSystems;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using static UnityEngine.Random;
-using System.Globalization;
 using System.Collections;
-using static UnityEditor.PlayerSettings;
-using System.Reflection;
-using System.Drawing;
 
 public class RubikBehaviour : MonoBehaviour
 {
@@ -67,9 +60,6 @@ public class RubikBehaviour : MonoBehaviour
 
     private void Start()
     {
-        m_SelectedGroupCubes = new List<GameObject>();
-        m_Moves = new List<MoveClass>();
-        m_MouseOverNormal = new MouseOverNormal();
         if (m_CubePrefab == null || m_Camera == null)
             ErrorDetected("One or multiple field unset in RubikBehaviour");
 
@@ -77,6 +67,11 @@ public class RubikBehaviour : MonoBehaviour
             m_MaterialTop == null || m_MaterialBottom == null ||
             m_MaterialLeft == null || m_MaterialRight == null)
             ErrorDetected("One or multiple texture missing in RubikBehaviour");
+
+        m_SelectedGroupCubes = new List<GameObject>();
+        m_Moves = new List<MoveClass>();
+        m_MouseOverNormal = new MouseOverNormal();
+
         Reload(m_RubikSize, 0);
     }
 
@@ -141,42 +136,42 @@ public class RubikBehaviour : MonoBehaviour
             axis = m_SelectedFace.transform.right;
 
         //Bottom
-        if (Mathf.Abs(Vector3.Dot(axis, transform.up)) < tolerance)
+        if (axis == transform.up)
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
             SelectFace(1);
             return temp_axis = 1;
         }
         //Up
-        if (Mathf.Abs(Vector3.Dot(axis, -transform.up)) < tolerance)
+        if (axis == -transform.up)
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
             SelectFace(1);
             return temp_axis = -1;
         }
         //Left
-        if (Mathf.Abs(Vector3.Dot(axis, transform.right)) < tolerance)
+        if (axis == transform.right)
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
             SelectFace(0);
             return temp_axis = 0;
         }
         //Right
-        if (Mathf.Abs(Vector3.Dot(axis, -transform.right)) < tolerance)
+        if (axis == -transform.right)
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
             SelectFace(0);
-            return temp_axis = -0;
+            return temp_axis = -4;
         }
         //Bottom
-        if (Mathf.Abs(Vector3.Dot(axis, transform.forward)) < tolerance)
+        if (axis == transform.forward)
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
             SelectFace(2);
             return temp_axis = 2;
         }
         //Up
-        if (Mathf.Abs(Vector3.Dot(axis, -transform.forward)) < tolerance)
+        if (axis == -transform.forward)
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
             SelectFace(2);
@@ -363,7 +358,7 @@ public class RubikBehaviour : MonoBehaviour
     }
     private void SelectFaceNumber(uint _axis, uint _index)
     {
-        float pos = _index - (m_RubikSize - 1) * 0.5f;
+        float pos = IndexToPosition(_index);
         if (_axis == 0)
         {
             foreach (GameObject cube in m_Cubes)
@@ -406,16 +401,15 @@ public class RubikBehaviour : MonoBehaviour
             if (newPos == m_PreviousPos)
                 return;
             Vector2 mouseDir = m_PreviousPos - newPos;
+            //Shortcut unity for Qr * Qimpur(mousdir,0,0) * Qrbar
+            mouseDir = transform.rotation * mouseDir; // TODO Test from face rotation
 
             //Shortcut by Unity
             if (!m_AxisDecided)
             {
                 //test over squared distance
-                //if (Mathf.Abs(mouseDir.y) > m_deltaThreshold || Mathf.Abs(mouseDir.y) > m_deltaThreshold)
                 if (Vector3.SqrMagnitude(mouseDir) > m_deltaThreshold * m_deltaThreshold)
                 {
-                    //Shortcut unity for Qr * Qimpur(mousdir,0,0) * Qrbar
-                    mouseDir = Quaternion.Inverse(m_SelectedCube.transform.rotation) * mouseDir;
                     if (Mathf.Abs(mouseDir.x) >= Mathf.Abs(mouseDir.y))
                         m_MouseXoverY = false;
                     else
