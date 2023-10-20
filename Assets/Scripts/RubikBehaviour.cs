@@ -45,6 +45,7 @@ public class RubikBehaviour : MonoBehaviour
 
     //Temp Move
     bool m_MouseXoverY;
+    Vector3 m_FirstAxis;
     private int temp_axis;
     private int temp_index;
     private float temp_angleofrotation = 0;
@@ -161,7 +162,7 @@ public class RubikBehaviour : MonoBehaviour
         {
             temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
             SelectFace(0);
-            return temp_axis = -4;
+            return temp_axis = -3;
         }
         //Bottom
         if (axis == transform.forward)
@@ -306,22 +307,6 @@ public class RubikBehaviour : MonoBehaviour
                 //return transform.forward;
             }
 
-        //float up = Vector3.Angle(diroriented, m_SelectedFace.transform.up);
-        //float right = Vector3.Angle(diroriented, m_SelectedFace.transform.right);
-        ////float forward = Vector3.Angle(_dir, m_SelectedFace.transform.forward);
-
-        //float min = Mathf.Min(Mathf.Abs(up), Mathf.Abs(right)/*, Mathf.Abs(forward)*/);
-        ////up = Vector3.Angle(m_SelectedFace.transform.up, Camera.current.transform.up);
-        //if (Mathf.Abs(up) == min)
-        //{
-        //    SelectFace(1);
-        //    return m_SelectedFace.transform.up;
-        //}
-        //if (Mathf.Abs(right) == min)
-        //{
-        //    SelectFace(0);
-        //    return m_SelectedFace.transform.right;
-        //}
         m_SelectedGroupCubes.Clear();
         return 0;
     }
@@ -401,8 +386,6 @@ public class RubikBehaviour : MonoBehaviour
             if (newPos == m_PreviousPos)
                 return;
             Vector2 mouseDir = m_PreviousPos - newPos;
-            //Shortcut unity for Qr * Qimpur(mousdir,0,0) * Qrbar
-            mouseDir = transform.rotation * mouseDir; // TODO Test from face rotation
 
             //Shortcut by Unity
             if (!m_AxisDecided)
@@ -410,25 +393,30 @@ public class RubikBehaviour : MonoBehaviour
                 //test over squared distance
                 if (Vector3.SqrMagnitude(mouseDir) > m_deltaThreshold * m_deltaThreshold)
                 {
-                    if (Mathf.Abs(mouseDir.x) >= Mathf.Abs(mouseDir.y))
+                    //follow the axis of the face
+                    if (Mathf.Abs(Vector3.Dot(mouseDir, m_SelectedFace.transform.right)) >= Mathf.Abs(Vector3.Dot(mouseDir, m_SelectedFace.transform.up)))
+                    {
+                        m_FirstAxis = m_SelectedFace.transform.right;
                         m_MouseXoverY = false;
+
+                    }
                     else
+                    {
+                        m_FirstAxis = m_SelectedFace.transform.up;
                         m_MouseXoverY = true;
+                    }
                 }
                 else
                     return;
                 temp_axis = SelectAxis(!m_MouseXoverY);
                 m_AxisDecided = true;
             }
-            float deltangle = /*(temp_axis < +0 ? -1 : 1) */ (m_MouseXoverY ? mouseDir.y : mouseDir.x) * m_AngularSpeed / 90;
+            float deltangle = (temp_axis < +0 ? -1 : 1) * (m_MouseXoverY ? -Vector3.Dot(mouseDir, m_FirstAxis) : Vector3.Dot(mouseDir, m_FirstAxis)) * m_AngularSpeed / 90;
             temp_angleofrotation += deltangle;
 
             //Precise here X or Y
             RotateFace((uint)Mathf.Abs(temp_axis), (uint)temp_index, deltangle);
 
-            //float angleXAxis = -dir.y * m_AngularSpeed / 180f;
-            //float angleYAxis = dir.x * m_AngularSpeed / 180f;
-            //RotateAll(angleXAxis, angleYAxis);
             m_PreviousPos = newPos;
         }
         //On release
@@ -439,9 +427,6 @@ public class RubikBehaviour : MonoBehaviour
                 int moves = Mathf.RoundToInt(temp_angleofrotation / 90f) % 4;//4 rotations = back to start
                 RotateFace((uint)Mathf.Abs(temp_axis), (uint)temp_index, -temp_angleofrotation //reset rotation
                                                                          + moves * 90f);       //Clip to nearest angle
-
-                //RotateFace(temp_axis, -temp_angleofrotation //reset rotation
-                //                        + moves * 90);     //Clip to nearest angle
 
                 RoundFacePositions((m_RubikSize % 2) == 0);
                 //Here add 1 more move to list
@@ -482,24 +467,6 @@ public class RubikBehaviour : MonoBehaviour
     {
         foreach (GameObject cube in m_SelectedGroupCubes)
         {
-            //Vector3 pivot = cube.transform.position;
-            //Vector3 relativePosition = cube.transform.position - pivot;
-
-            //Quaternion rotation = Quaternion.AngleAxis(_angle, _axis);
-
-            //// Apply the rotation to the relative position
-            //Vector3 newPosition = rotation * relativePosition;
-
-            //// Add the pivot point back to the new position
-            //newPosition += pivot;
-
-            //// Apply the new position
-            //cube.transform.position = newPosition;
-
-            //// Apply the rotation
-            //cube.transform.rotation = rotation * cube.transform.rotation;
-
-
             Vector3 oldposition = cube.transform.position;
             Quaternion currentRotation = Quaternion.AngleAxis(_angle, _axis);
             Quaternion newposition = currentRotation * new Quaternion(oldposition.x, oldposition.y, oldposition.z, 0f) * Quaternion.Inverse(currentRotation);
@@ -520,6 +487,10 @@ public class RubikBehaviour : MonoBehaviour
                 break;
             case 2:
                 axis = transform.forward;
+                break;
+            //In case axe = -0 <=> -x <=> _axis%3
+            case 3:
+                axis = -transform.right;
                 break;
             default:
                 return;
@@ -547,7 +518,7 @@ public class RubikBehaviour : MonoBehaviour
             cube.transform.localPosition = newposition;
         }
     }
-    private void AddMove(uint _axis, uint _index, int _number)
+    private void AddMove(uint _axis, uint _index, int _number, bool skipRedundancyAnalysis = false)
     {
         if (m_Moves.Count != 0 && m_Moves.Last().axis == _axis && m_Moves.Last().index == _index)
         {
@@ -561,28 +532,80 @@ public class RubikBehaviour : MonoBehaviour
         {
             m_Moves.Add(new MoveClass(_axis, _index, _number));
         }
-        CyclicRemove();
+        if (!skipRedundancyAnalysis)
+            CyclicRemove();
         MovesChanged?.Invoke();
     }
+    // A whole row/colon/aisle turned by the same amount = no change
     private void CyclicRemove()
     {
-        if (m_Moves.Count < 3)
+        if (m_Moves.Count < 2)
             return;
-        MoveClass last = m_Moves.Last();
-        MoveClass beforeLast = m_Moves[m_Moves.Count - 2];
-        MoveClass thirdLast = m_Moves[m_Moves.Count - 3];
-        if (
-        (last.number == beforeLast.number) &&       //same number
-        (last.number == thirdLast.number) &&        //same number
-        (last.axis == beforeLast.axis) &&           //same axis
-        (last.axis == thirdLast.axis) &&            //same axis
-        (last.index != beforeLast.index) &&         //different indexes
-        (last.index != thirdLast.index) &&          //different indexes
-        (beforeLast.index != thirdLast.index))      //different indexes
-        { m_Moves.RemoveRange(m_Moves.Count - 3, 3); } //Erase 3 last
-        else return;
+        List<MoveClass> lastXmoves = new()
+        {
+            m_Moves.Last()
+        };
+        int min = m_Moves.Last().number;
+        for (int i = 1; i < m_Moves.Count && i < m_RubikSize; i++)
+        {
+            if (m_Moves.Count < 2)
+                return;
+            MoveClass i_before_last = m_Moves[m_Moves.Count - 1 - i];        //must have
+
+            if (i_before_last.axis != m_Moves.Last().axis)     //same axis
+            {
+                lastXmoves.Clear(); //not necessary but keeping good habits
+                return;
+            }
+            bool add = true;
+            for (int j = lastXmoves.Count - 1; j >= 0; j--)
+            {
+                MoveClass lasts = lastXmoves[j];
+                // Here merge same moves
+                if (i_before_last.index == lasts.index) // Different indexes should always be true
+                {
+                    lasts.number = (lasts.number + i_before_last.number) % 4;
+                    if (lasts.number == 0)
+                    {
+                        lastXmoves.RemoveAt(j);
+                        m_Moves.Remove(lasts);
+                        i--;
+                    }
+                    m_Moves.Remove(i_before_last);
+                    i--;
+                    add = false;
+                    break;
+                }
+            }
+            if (!add)
+                continue;
+            lastXmoves.Add(i_before_last);
+            if (i_before_last.number < min)
+                min = i_before_last.number;
+        }
+        if (lastXmoves.Count < m_RubikSize)
+            return;
+        // erase moves the more the better
+        for (int i = lastXmoves.Count - 1; i >= 0; i--)
+        {
+            MoveClass lasts = lastXmoves[i];
+            lasts.number = (lasts.number - min) % 4;
+            if (lasts.number == 0)
+            {
+                int indexToRemove = m_Moves.Count - 1 - lastXmoves.IndexOf(lasts);
+                m_Moves.RemoveAt(indexToRemove);
+                lastXmoves.RemoveAt(i);
+            }
+            else
+            {
+                int indexToModify = m_Moves.Count - 1 - lastXmoves.IndexOf(lasts);
+                m_Moves[indexToModify].number = lasts.number;
+            }
+        }
+        lastXmoves.Clear();
         CyclicRemove();
     }
+
     private void HandleMouseOver()
     {
         // This method will be called when a child face is moused over.
@@ -731,7 +754,7 @@ public class RubikBehaviour : MonoBehaviour
             // Rotate the face
             RotateFace(axis, index, number);
             // Add the move
-            AddMove(axis, index, number);
+            AddMove(axis, index, number, true);
             m_BlockedCtrls = true;
             // Wait for a specified amount of time (e.g., 1 second)
             yield return new WaitForSeconds(m_TimePerMoveToSolve); // Adjust the time as needed
