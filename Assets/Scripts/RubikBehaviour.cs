@@ -121,19 +121,10 @@ public class RubikBehaviour : MonoBehaviour
 
     private int SelectAxis(bool _XoverY)
     {
-        float tolerance = 0.00001f;
         Vector3 axis;
         if (_XoverY)
-        {
-            //if(transform.right == m_SelectedFace.transform.forward)
-            //    axis = Vector3.Cross(transform.right, m_SelectedFace.transform.forward);
-            //else if (transform.right == -m_SelectedFace.transform.forward)
-            //    axis = Vector3.Cross(transform.right, m_SelectedFace.transform.forward);
-            //axis = Vector3.Cross(transform.right, m_SelectedFace.transform.forward);
             axis = m_SelectedFace.transform.up;
-        }
         else
-            //axis = Vector3.Cross(transform.up, m_SelectedFace.transform.forward);
             axis = m_SelectedFace.transform.right;
 
         //Bottom
@@ -178,135 +169,6 @@ public class RubikBehaviour : MonoBehaviour
             SelectFace(2);
             return temp_axis = -2;
         }
-
-
-
-        //Rotate mouse axis
-        //Vector3 diroriented = m_SelectedFace.transform.rotation * _dir;// * Quaternion.Inverse(m_SelectedFace.transform.rotation);
-        //float up = Vector3.Dot(_dir, m_SelectedFace.transform.up);
-        //float right = Vector3.Dot(_dir, m_SelectedFace.transform.right);
-        //float forward = Vector3.Dot(_dir, m_SelectedFace.transform.forward);
-        //
-        //float max = Mathf.Max(Mathf.Abs(right), Mathf.Abs(forward));
-
-
-        //if (Mathf.Abs(up) >= max)
-        //{
-        //SelectFace(0);
-        //return m_SelectedFace.transform.right;
-        //}
-        //else
-        //{
-        //if (Mathf.Abs(right) >= max)
-        //SelectFace(1);
-        //else if (Mathf.Abs(forward) >= max)
-        //SelectFace(2);
-        //return transform.up;
-        //}
-        //else if (max == Mathf.Abs(forward))
-        //{
-        //    SelectFace(2);
-        //    return m_SelectedFace.transform.forward;
-        //}
-
-        //Front Face
-        if (m_SelectedFace.transform.forward == transform.forward)
-            if (_XoverY)
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
-                SelectFace(1);
-                return temp_axis = 1;
-                //return transform.up; 
-            }
-            else
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
-                SelectFace(0);
-                return temp_axis = 0;
-                //return transform.right;
-            }
-        //Back Face
-        if (m_SelectedFace.transform.forward == -transform.forward)
-            if (_XoverY)
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
-                SelectFace(1);
-                return temp_axis = -1;
-                //return -transform.up;
-            }
-            else
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
-                SelectFace(0);
-                return temp_axis = -0; //Could be a problem
-                                       //return -transform.right;
-            };
-        //Up Face
-        if (m_SelectedFace.transform.forward == -transform.up)
-            if (_XoverY)
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
-                SelectFace(2);
-                return temp_axis = 2;
-                //return transform.forward;
-            }
-            else
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
-                SelectFace(0);
-                return temp_axis = 0;
-                //return transform.right;
-            }
-        //Bottom Face
-        if (m_SelectedFace.transform.forward == transform.up)
-            if (_XoverY)
-                if (_XoverY)
-                {
-                    temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
-                    SelectFace(2);
-                    return temp_axis = -2;
-                    //return -transform.forward;
-                }
-                else
-                {
-                    temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.x);
-                    SelectFace(0);
-                    return temp_axis = 0;
-                    //return transform.right;
-                }
-        //Left Face
-        if (m_SelectedFace.transform.forward == transform.right)
-            if (_XoverY)
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
-                SelectFace(1);
-                return temp_axis = 1;
-                //return transform.up; 
-            }
-            else
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
-                SelectFace(2);
-                return temp_axis = -2;
-                //return -transform.forward;
-            }
-        //Left Face
-        if (m_SelectedFace.transform.forward == -transform.right)
-            if (_XoverY)
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.y);
-                SelectFace(1);
-                return temp_axis = 1;
-                //return transform.up;
-            }
-            else
-            {
-                temp_index = PositionToIndex(m_SelectedCube.transform.localPosition.z);
-                SelectFace(2);
-                return temp_axis = 2;
-                //return transform.forward;
-            }
-
         m_SelectedGroupCubes.Clear();
         return 0;
     }
@@ -490,7 +352,7 @@ public class RubikBehaviour : MonoBehaviour
                 break;
             //In case axe = -0 <=> -x <=> _axis%3
             case 3:
-                axis = -transform.right;
+                axis = transform.right;
                 break;
             default:
                 return;
@@ -539,7 +401,7 @@ public class RubikBehaviour : MonoBehaviour
     // A whole row/colon/aisle turned by the same amount = no change
     private void CyclicRemove()
     {
-        if (m_Moves.Count < 2)
+        if (m_Moves.Count < m_RubikSize)
             return;
         List<MoveClass> lastXmoves = new()
         {
@@ -583,7 +445,7 @@ public class RubikBehaviour : MonoBehaviour
             if (i_before_last.number < min)
                 min = i_before_last.number;
         }
-        if (lastXmoves.Count < m_RubikSize)
+        if (lastXmoves.Count != m_RubikSize)
             return;
         // erase moves the more the better
         for (int i = lastXmoves.Count - 1; i >= 0; i--)
@@ -628,6 +490,13 @@ public class RubikBehaviour : MonoBehaviour
         m_Camera.GetComponent<CameraBehaviour>().SizeChanged(_newSize);
         //Rotate to see 3 faces
         CreateRubik();
+        //Special
+        if (_newSize == 5 && _shuffles == 55)
+        {
+            AddSus();
+            transform.rotation = new Quaternion(0.5f, 0.5f, -0.5f, -0.5f);
+            return;
+        }
         Shuffle(_shuffles);
         RotateAll(-30, 45);
     }
@@ -761,5 +630,85 @@ public class RubikBehaviour : MonoBehaviour
         }
         m_BlockedCtrls = false;
     }
+    void AddSus()
+{
+        AddMove(2, 1, 1,false);//0
+        RotateFace(2, 1, 1); 
+        AddMove(2, 0, 1,false);//1
+        RotateFace(2, 0, 1);
+        AddMove(0, 3, 1,false);//2
+        RotateFace(0, 3, 1);
+        AddMove(0, 2, 1,false);//3
+        RotateFace(0, 2, 1);
+        AddMove(2, 1, -1,false);//4
+        RotateFace(2, 1, -1);
+        AddMove(2, 0, -1,false);//5
+        RotateFace(2, 0, -1);
+        AddMove(3, 3, 1,false);//6
+        RotateFace(3, 3, 1);
+        AddMove(3, 2, 1,false);//7
+        RotateFace(3, 2, 1);
+        AddMove(1, 0, -1,false);//8
+        RotateFace(1, 0, -1);
+        AddMove(2, 0, -1,false);//9
+        RotateFace(2, 0, -1);
+        AddMove(3, 0, -1, false);//10
+        RotateFace(3, 0, -1);
+        AddMove(2, 0, 1,false);//11
+        RotateFace(2, 0, 1);
+        AddMove(0, 0, -1,false);//12
+        RotateFace(0, 0, -1);
+        AddMove(2, 4, -1,false);//13
+        RotateFace(2, 4, -1);
+        AddMove(1, 0, 1,false);//14
+        RotateFace(1, 0, 1);
+        AddMove(2, 4, 1,false);//15
+        RotateFace(2, 4, 1);
+        AddMove(2, 0, 1,false);
+        RotateFace(2, 0, 1);
+        AddMove(3, 4, -1,false);//17
+        RotateFace(3, 4, -1);
+        AddMove(2, 0, -1,false);//18
+        RotateFace(2, 0, -1);
+        AddMove(0, 4, -2,false);//19
+        RotateFace(0, 4, -2);
+        AddMove(2, 4, 1,false);//20
+        RotateFace(2, 4, 1);
+        AddMove(0, 4, 1,false);//21
+        RotateFace(0, 4, 1);
+        AddMove(1, 0, -1,false);//22
+        RotateFace(1, 0, -1);
+        AddMove(2, 4, -1,false);//23
+        RotateFace(2, 4, -1);
+        AddMove(1, 0, 1,false);//24
+        RotateFace(1, 0, 1);
+        AddMove(3, 0, 1,false);//25
+        RotateFace(3, 0, 1);
+        AddMove(2, 4, -1,false);//26
+        RotateFace(2, 4, -1);
+        AddMove(3, 0, -1,false);//27
+        RotateFace(3, 0, -1);
+        AddMove(2, 4, 1,false);//28
+        RotateFace(2, 4, 1);
+        AddMove(1, 0, -3,false);//29
+        RotateFace(1, 0, -3);
+        AddMove(0, 1, 1,false);//30
+        RotateFace(0, 1, 1);
+        AddMove(2, 0, -1, false);//31
+        RotateFace(2, 0, -1);
+        AddMove(0, 1, -1,false);//32
+        RotateFace(0, 1, -1);
+        AddMove(2, 0, 1,false);//33
+        RotateFace(2, 0, 1);
+        AddMove(1, 0, 1,false);//34
+        RotateFace(1, 0, 1);
+        AddMove(2, 2, -1,false);//35
+        RotateFace(2, 2, -1);
+        AddMove(0, 0, -1,false);//36
+        RotateFace(0, 0, -1);
+        AddMove(2, 2, 1,false);//37
+        RotateFace(2, 2, 1);
+        AddMove(3, 0, -1,false);//38
+        RotateFace(3, 0, -1);
+    }
 }
-
