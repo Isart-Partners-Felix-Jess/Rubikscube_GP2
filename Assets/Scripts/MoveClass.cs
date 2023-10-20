@@ -10,4 +10,14 @@ public class MoveClass
         index = _index;
         number = _number;
     }
+    //Care with this one
+    public void ChangeAxis(uint _axis)
+    {
+        axis = _axis;
+    }
+    //Care with this one
+    public void ChangeNumber(int _number)
+    {
+        number = _number;
+    }
 }

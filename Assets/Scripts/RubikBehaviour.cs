@@ -36,6 +36,9 @@ public class RubikBehaviour : MonoBehaviour
     [SerializeField, Tooltip("In seconds")] private float m_TimePerMoveToSolve = 0.5f;
     [SerializeField, Tooltip("In seconds")] private float m_TimePerMoveToShuffle = 0.25f;
 
+
+    Dictionary<string, List<GameObject>> m_Faces;
+
     private GameObject m_SelectedFace = null;
     private GameObject m_SelectedCube = null;
     private List<GameObject> m_SelectedGroupCubes;
@@ -72,6 +75,13 @@ public class RubikBehaviour : MonoBehaviour
         m_SelectedGroupCubes = new List<GameObject>();
         m_Moves = new List<MoveClass>();
         m_MouseOverNormal = new MouseOverNormal();
+        m_Faces = new();
+        m_Faces["Front"] = new List<GameObject>();
+        m_Faces["Back"] = new List<GameObject>();
+        m_Faces["Bottom"] = new List<GameObject>();
+        m_Faces["Top"] = new List<GameObject>();
+        m_Faces["Left"] = new List<GameObject>();
+        m_Faces["Right"] = new List<GameObject>();
 
         Reload(m_RubikSize, 0);
     }
@@ -302,6 +312,7 @@ public class RubikBehaviour : MonoBehaviour
             m_SelectedCube = null;
             m_AxisDecided = false;
             m_SelectedGroupCubes.Clear();
+            CheckCompletionByFace();
         }
     }
     private void RotateFaceAroundNormal(Vector3 _normal, float _angle)
@@ -506,6 +517,8 @@ public class RubikBehaviour : MonoBehaviour
         m_Cubes = new GameObject[0];
         transform.rotation = Quaternion.identity;
         m_Moves.Clear();
+        foreach (var face in m_Faces)
+            face.Value.Clear();
         StopAllCoroutines();
     }
 
@@ -541,6 +554,7 @@ public class RubikBehaviour : MonoBehaviour
                 OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
                 script.onMouseOverAction += HandleMouseOver;
                 extFace.gameObject.tag = "ext";
+                m_Faces["Front"].Add(extFace.gameObject);
             }
             else if (z == limit) // back face
             {
@@ -549,6 +563,7 @@ public class RubikBehaviour : MonoBehaviour
                 OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
                 script.onMouseOverAction += HandleMouseOver;
                 extFace.gameObject.tag = "ext";
+                m_Faces["Back"].Add(extFace.gameObject);
             }
             if (y == -limit) // bottom face
             {
@@ -556,6 +571,7 @@ public class RubikBehaviour : MonoBehaviour
                 extFace.GetComponent<MeshRenderer>().material = m_MaterialBottom;
                 OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
                 script.onMouseOverAction += HandleMouseOver;
+                m_Faces["Bottom"].Add(extFace.gameObject);
                 extFace.gameObject.tag = "ext";
             }
             else if (y == limit) // top face
@@ -565,6 +581,7 @@ public class RubikBehaviour : MonoBehaviour
                 OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
                 script.onMouseOverAction += HandleMouseOver;
                 extFace.gameObject.tag = "ext";
+                m_Faces["Top"].Add(extFace.gameObject);
             }
             if (x == -limit) // left face
             {
@@ -573,6 +590,7 @@ public class RubikBehaviour : MonoBehaviour
                 OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
                 script.onMouseOverAction += HandleMouseOver;
                 extFace.gameObject.tag = "ext";
+                m_Faces["Left"].Add(extFace.gameObject);
             }
             else if (x == limit) // right face
             {
@@ -581,7 +599,26 @@ public class RubikBehaviour : MonoBehaviour
                 OnMouseOverColor script = extFace.gameObject.AddComponent(typeof(OnMouseOverColor)) as OnMouseOverColor;
                 script.onMouseOverAction += HandleMouseOver;
                 extFace.gameObject.tag = "ext";
+                m_Faces["Right"].Add(extFace.gameObject);
             }
+        }
+    }
+    //Use after Addmoves for more efficiency
+    private void CheckCompletionByFace()
+    {
+        foreach (var face in m_Faces)
+        {
+            Vector3 fwdVector = face.Value.First().transform.forward;
+            foreach (var subsquare in face.Value)
+            {
+                if (subsquare.transform.forward != fwdVector)
+                    return;
+            }
+        }
+        if (m_Moves.Count != 0)
+        {
+            m_Moves.Clear();
+            MovesChanged?.Invoke();
         }
     }
 
@@ -627,84 +664,84 @@ public class RubikBehaviour : MonoBehaviour
         m_BlockedCtrls = false;
     }
     void AddSus()
-{
-        AddMove(2, 1, 1,false);//0
-        RotateFace(2, 1, 1); 
-        AddMove(2, 0, 1,false);//1
+    {
+        AddMove(2, 1, 1, false);//0
+        RotateFace(2, 1, 1);
+        AddMove(2, 0, 1, false);//1
         RotateFace(2, 0, 1);
-        AddMove(0, 3, 1,false);//2
+        AddMove(0, 3, 1, false);//2
         RotateFace(0, 3, 1);
-        AddMove(0, 2, 1,false);//3
+        AddMove(0, 2, 1, false);//3
         RotateFace(0, 2, 1);
-        AddMove(2, 1, -1,false);//4
+        AddMove(2, 1, -1, false);//4
         RotateFace(2, 1, -1);
-        AddMove(2, 0, -1,false);//5
+        AddMove(2, 0, -1, false);//5
         RotateFace(2, 0, -1);
-        AddMove(3, 3, 1,false);//6
+        AddMove(3, 3, 1, false);//6
         RotateFace(3, 3, 1);
-        AddMove(3, 2, 1,false);//7
+        AddMove(3, 2, 1, false);//7
         RotateFace(3, 2, 1);
-        AddMove(1, 0, -1,false);//8
+        AddMove(1, 0, -1, false);//8
         RotateFace(1, 0, -1);
-        AddMove(2, 0, -1,false);//9
+        AddMove(2, 0, -1, false);//9
         RotateFace(2, 0, -1);
         AddMove(3, 0, -1, false);//10
         RotateFace(3, 0, -1);
-        AddMove(2, 0, 1,false);//11
+        AddMove(2, 0, 1, false);//11
         RotateFace(2, 0, 1);
-        AddMove(0, 0, -1,false);//12
+        AddMove(0, 0, -1, false);//12
         RotateFace(0, 0, -1);
-        AddMove(2, 4, -1,false);//13
+        AddMove(2, 4, -1, false);//13
         RotateFace(2, 4, -1);
-        AddMove(1, 0, 1,false);//14
+        AddMove(1, 0, 1, false);//14
         RotateFace(1, 0, 1);
-        AddMove(2, 4, 1,false);//15
+        AddMove(2, 4, 1, false);//15
         RotateFace(2, 4, 1);
-        AddMove(2, 0, 1,false);
+        AddMove(2, 0, 1, false);
         RotateFace(2, 0, 1);
-        AddMove(3, 4, -1,false);//17
+        AddMove(3, 4, -1, false);//17
         RotateFace(3, 4, -1);
-        AddMove(2, 0, -1,false);//18
+        AddMove(2, 0, -1, false);//18
         RotateFace(2, 0, -1);
-        AddMove(0, 4, -2,false);//19
+        AddMove(0, 4, -2, false);//19
         RotateFace(0, 4, -2);
-        AddMove(2, 4, 1,false);//20
+        AddMove(2, 4, 1, false);//20
         RotateFace(2, 4, 1);
-        AddMove(0, 4, 1,false);//21
+        AddMove(0, 4, 1, false);//21
         RotateFace(0, 4, 1);
-        AddMove(1, 0, -1,false);//22
+        AddMove(1, 0, -1, false);//22
         RotateFace(1, 0, -1);
-        AddMove(2, 4, -1,false);//23
+        AddMove(2, 4, -1, false);//23
         RotateFace(2, 4, -1);
-        AddMove(1, 0, 1,false);//24
+        AddMove(1, 0, 1, false);//24
         RotateFace(1, 0, 1);
-        AddMove(3, 0, 1,false);//25
+        AddMove(3, 0, 1, false);//25
         RotateFace(3, 0, 1);
-        AddMove(2, 4, -1,false);//26
+        AddMove(2, 4, -1, false);//26
         RotateFace(2, 4, -1);
-        AddMove(3, 0, -1,false);//27
+        AddMove(3, 0, -1, false);//27
         RotateFace(3, 0, -1);
-        AddMove(2, 4, 1,false);//28
+        AddMove(2, 4, 1, false);//28
         RotateFace(2, 4, 1);
-        AddMove(1, 0, -3,false);//29
+        AddMove(1, 0, -3, false);//29
         RotateFace(1, 0, -3);
-        AddMove(0, 1, 1,false);//30
+        AddMove(0, 1, 1, false);//30
         RotateFace(0, 1, 1);
         AddMove(2, 0, -1, false);//31
         RotateFace(2, 0, -1);
-        AddMove(0, 1, -1,false);//32
+        AddMove(0, 1, -1, false);//32
         RotateFace(0, 1, -1);
-        AddMove(2, 0, 1,false);//33
+        AddMove(2, 0, 1, false);//33
         RotateFace(2, 0, 1);
-        AddMove(1, 0, 1,false);//34
+        AddMove(1, 0, 1, false);//34
         RotateFace(1, 0, 1);
-        AddMove(2, 2, -1,false);//35
+        AddMove(2, 2, -1, false);//35
         RotateFace(2, 2, -1);
-        AddMove(0, 0, -1,false);//36
+        AddMove(0, 0, -1, false);//36
         RotateFace(0, 0, -1);
-        AddMove(2, 2, 1,false);//37
+        AddMove(2, 2, 1, false);//37
         RotateFace(2, 2, 1);
-        AddMove(3, 0, -1,false);//38
+        AddMove(3, 0, -1, false);//38
         RotateFace(3, 0, -1);
     }
 }
