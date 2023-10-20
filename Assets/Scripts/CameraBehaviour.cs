@@ -8,8 +8,6 @@ public class CameraBehaviour : MonoBehaviour
 
     private float m_DistanceFromTarget = 6;
 
-    //private Vector3 m_PreviousPos = Vector3.zero;
-
     private void Start()
     {
         if (m_Camera == null || m_Cube == null)
@@ -18,7 +16,7 @@ public class CameraBehaviour : MonoBehaviour
         ReloadCamera();
     }
 
-    void ErrorDetected(string _error)
+    private void ErrorDetected(string _error)
     {
         Debug.LogError(_error);
         #if UNITY_EDITOR
@@ -35,10 +33,8 @@ public class CameraBehaviour : MonoBehaviour
 
     private void Update()
     {
-        if(Input.mouseScrollDelta.y != 0f)
-        {
+        if (Input.mouseScrollDelta.y != 0f)
             m_Camera.fieldOfView -= Input.mouseScrollDelta.y;
-        }
     }
 
     private void ReloadCamera()

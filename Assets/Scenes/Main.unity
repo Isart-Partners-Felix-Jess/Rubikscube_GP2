@@ -696,21 +696,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Right click -> Move the whole Cube
-
-    Left click -> Select a Cube
-
-    Drag
-    & drop to move one Face along its axis
-
-    Releqse to clip to the Nearest
-
-    Confirm
-    -> reload a new Cube
-
-    Solve -> auto-resolve the Cube
-
-    Esc -> Quit'
+  m_text: "Right click -> Move the whole Cube\nLeft click -> Select a Cube\n- Drag
+    & drop to move one \n face along its axis.\n- Release to clip to the nearest.\nConfirm
+    -> Reload a new Cube\nSolve -> Auto-resolve the Cube\nEsc -> Quit"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -2835,50 +2823,6 @@ RectTransform:
   m_AnchoredPosition: {x: -112.8999, y: -51}
   m_SizeDelta: {x: 225, y: 100.69995}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1 &1951579983
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1951579985}
-  - component: {fileID: 1951579984}
-  m_Layer: 0
-  m_Name: GameManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1951579984
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1951579983}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 553ce38f953894048a3b999913405f3e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1951579985
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1951579983}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.00000011920929, y: 0.00000011920929, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1968299431
 GameObject:
   m_ObjectHideFlags: 0
@@ -2914,8 +2858,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -128, y: -168.7}
-  m_SizeDelta: {x: 424.2, y: 331.9}
+  m_AnchoredPosition: {x: -128, y: -121.7}
+  m_SizeDelta: {x: 424.2, y: 229.3}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1968299433
 MonoBehaviour:
@@ -3146,7 +3090,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Le Cube de Rubik version Becaud-Perrochaud
+  m_text: The Cube of Rubik version Becaud-Perrochaud
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -3592,7 +3536,6 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1951579985}
   - {fileID: 54877526}
   - {fileID: 489133233}
   - {fileID: 1020677670}

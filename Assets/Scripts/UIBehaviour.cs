@@ -20,12 +20,12 @@ public class UIBehaviour : MonoBehaviour
     [Header("Other")]
     [SerializeField] private Button m_ConfirmButton = null;
     [SerializeField] private Button m_SolveButton = null;
-
     [SerializeField] private TextMeshProUGUI m_SuccessText = null;
     [SerializeField] private TextMeshProUGUI m_MovesLeftText = null;
     [SerializeField] private GameObject m_Cube = null;
+    private RubikBehaviour m_RubikBehaviour;
 
-    void Start()
+    private void Start()
     {
         if (m_SizeText == null || m_SizeSlider == null ||
             m_ShuffleText == null || m_ShuffleSlider == null ||
@@ -42,10 +42,11 @@ public class UIBehaviour : MonoBehaviour
 
         m_InstructionButton.onClick.AddListener(delegate { InstructionPressed(); });
 
-        m_Cube.GetComponent<RubikBehaviour>().MovesChanged += MovesChanged;
-
+        m_RubikBehaviour = m_Cube.GetComponent<RubikBehaviour>();
+        m_RubikBehaviour.MovesChanged += MovesChanged;
     }
-    void ErrorDetected(string _error)
+
+    private void ErrorDetected(string _error)
     {
         Debug.LogError(_error);
         #if UNITY_EDITOR
@@ -54,50 +55,54 @@ public class UIBehaviour : MonoBehaviour
         Application.Quit();
     }
 
-    void ConfirmedPressed()
+    private void ConfirmedPressed()
     {
         m_SuccessText.gameObject.SetActive(false);
-        m_Cube.GetComponent<RubikBehaviour>().Reload((uint)m_SizeSlider.value, (uint)m_ShuffleSlider.value);
+        m_RubikBehaviour.Reload((uint)m_SizeSlider.value, (uint)m_ShuffleSlider.value);
     }
-    void SolvePressed()
+
+    private void SolvePressed()
     {
         m_SuccessText.gameObject.SetActive(false);
-        m_Cube.GetComponent<RubikBehaviour>().Solve();
+        m_RubikBehaviour.Solve();
     }
-    void InstructionPressed()
+
+    private void InstructionPressed()
     {
         Vector3 currentScale = m_InstructionButton.transform.localScale;
         m_InstructionButton.transform.localScale = new(currentScale.x, -currentScale.y, currentScale.z);
         m_InstructionPanel.SetActive(!m_InstructionPanel.activeInHierarchy);
     }
 
-    void SizeChanged()
+    private void SizeChanged()
     {
         m_SizeText.text = "Cube Size : ";
-        if (m_SizeSlider.value < 10) 
+        if (m_SizeSlider.value < 10)
             m_SizeText.text += "0" + m_SizeSlider.value.ToString();
-        else 
+        else
             m_SizeText.text += m_SizeSlider.value.ToString();
     }
 
-    void ShuffleChanged()
+    private void ShuffleChanged()
     {
         m_ShuffleText.text = "Shuffles : ";
         if (m_ShuffleSlider.value < 100)
         {
             m_ShuffleText.text += "0";
-            if (m_ShuffleSlider.value < 10) 
+            if (m_ShuffleSlider.value < 10)
                 m_ShuffleText.text += "0" + m_ShuffleSlider.value.ToString();
             else
                 m_ShuffleText.text += m_ShuffleSlider.value.ToString();
         }
-        else m_ShuffleText.text += m_ShuffleSlider.value.ToString();
+        else
+            m_ShuffleText.text += m_ShuffleSlider.value.ToString();
     }
 
-    void MovesChanged()
+    private void MovesChanged()
     {
-        int count = m_Cube.GetComponent<RubikBehaviour>().moves.Count;
-        string str_count = m_Cube.GetComponent<RubikBehaviour>().moves.Count.ToString();
+        int count = m_RubikBehaviour.Moves.Count;
+        string str_count = m_RubikBehaviour.Moves.Count.ToString();
+
         m_MovesLeftText.text = "Moves Left : ";
         if (count < 100)
         {
@@ -107,7 +112,8 @@ public class UIBehaviour : MonoBehaviour
             else
                 m_MovesLeftText.text += str_count;
         }
-        else m_MovesLeftText.text += str_count;
+        else
+            m_MovesLeftText.text += str_count;
 
         if (count == 0)
             Successful();
@@ -115,7 +121,7 @@ public class UIBehaviour : MonoBehaviour
             m_SuccessText.gameObject.SetActive(false);
     }
 
-    void Successful()
+    private void Successful()
     {
         m_SuccessText.gameObject.SetActive(true);
     }

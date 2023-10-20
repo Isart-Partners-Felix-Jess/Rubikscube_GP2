@@ -4,28 +4,26 @@ using UnityEngine;
 [RequireComponent(typeof(BoxCollider))]
 public class OnMouseOverColor : MonoBehaviour
 {
-    //only for Debug purpose
-    bool m_IsHighlighted = false;
     public Action onMouseOverAction;
 
-    //When the mouse hovers over the GameObject, it turns to this color (red)
-    Color m_MouseOverColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+    // When the mouse hovers over the GameObject, it turns to this color (red)
+    private Color m_MouseOverColor = new(0.5f, 0.5f, 0.5f, 0.5f);
 
-    //This stores the GameObject’s original color
-    Color m_OriginalColor;
+    // This stores the GameObject’s original color
+    private Color m_OriginalColor;
 
-    //Get the GameObject’s mesh renderer to access the GameObject’s material and color
-    MeshRenderer m_Renderer;
+    // Get the GameObject’s mesh renderer to access the GameObject’s material and color
+    private MeshRenderer m_Renderer;
 
-    void Start()
+    private void Start()
     {
-        //Fetch the mesh renderer component from the GameObject
+        // Fetch the mesh renderer component from the GameObject
         m_Renderer = GetComponent<MeshRenderer>();
-        //Fetch the original color of the GameObject
+        // Fetch the original color of the GameObject
         m_OriginalColor = m_Renderer.material.color;
     }
 
-    void OnMouseOver()
+    private void OnMouseOver()
     {
         if (Input.GetMouseButton(0) || Input.GetMouseButton(1))
             m_Renderer.material.color = m_OriginalColor;
@@ -33,20 +31,16 @@ public class OnMouseOverColor : MonoBehaviour
         else
         {
             m_Renderer.material.color = m_MouseOverColor;
-            m_IsHighlighted = true;
             onMouseOverAction?.Invoke();
         }
     }
 
-    void OnMouseExit()
+    private void OnMouseExit()
     {
         if (Input.GetMouseButton(0))
             return;
         else
-        {
             // Reset the color of the GameObject back to normal
             m_Renderer.material.color = m_OriginalColor;
-            m_IsHighlighted = false;
-        }
     }
 }
