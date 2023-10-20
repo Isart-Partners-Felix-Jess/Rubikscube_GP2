@@ -277,7 +277,7 @@ public class RubikBehaviour : MonoBehaviour
             temp_angleofrotation += deltangle;
 
             //Precise here X or Y
-            RotateFace((uint)Mathf.Abs(temp_axis), (uint)temp_index, deltangle);
+            RotateFace((uint)Mathf.Abs(temp_axis) % 3, (uint)temp_index, deltangle);
 
             m_PreviousPos = newPos;
         }
@@ -287,13 +287,13 @@ public class RubikBehaviour : MonoBehaviour
             if (temp_angleofrotation != 0f)
             {
                 int moves = Mathf.RoundToInt(temp_angleofrotation / 90f) % 4;//4 rotations = back to start
-                RotateFace((uint)Mathf.Abs(temp_axis), (uint)temp_index, -temp_angleofrotation //reset rotation
+                RotateFace((uint)Mathf.Abs(temp_axis) % 3, (uint)temp_index, -temp_angleofrotation //reset rotation
                                                                          + moves * 90f);       //Clip to nearest angle
 
                 RoundFacePositions((m_RubikSize % 2) == 0);
                 //Here add 1 more move to list
                 if (moves != 0)
-                    AddMove((uint)Mathf.Abs(temp_axis), (uint)temp_index, moves);
+                    AddMove((uint)Mathf.Abs(temp_axis) % 3, (uint)temp_index, moves);
             }
             //Reset Variables
             temp_angleofrotation = 0f;
@@ -349,10 +349,6 @@ public class RubikBehaviour : MonoBehaviour
                 break;
             case 2:
                 axis = transform.forward;
-                break;
-            //In case axe = -0 <=> -x <=> _axis%3
-            case 3:
-                axis = transform.right;
                 break;
             default:
                 return;
@@ -445,7 +441,7 @@ public class RubikBehaviour : MonoBehaviour
             if (i_before_last.number < min)
                 min = i_before_last.number;
         }
-        if (lastXmoves.Count != m_RubikSize)
+        if (m_Moves.Count != m_RubikSize)
             return;
         // erase moves the more the better
         for (int i = lastXmoves.Count - 1; i >= 0; i--)
